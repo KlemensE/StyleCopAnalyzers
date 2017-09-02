@@ -2104,6 +2104,29 @@ class ClassName
             await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
+        [Fact]
+        [WorkItem(2521, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/2521")]
+        public async Task TestBracesInLambdaAsync()
+        {
+            var testCode = @"namespace TestNamespace
+{
+    using System.Collections.Generic;
+    using System.Linq;
+
+    public class TestClass
+    {
+        public void TestMethod()
+        {
+            var testList = new List<int>();
+            testList.Select(number => (number + 3) * 20);
+        }
+    }
+}
+";
+
+            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+        }
+
         /// <inheritdoc/>
         protected override IEnumerable<DiagnosticAnalyzer> GetCSharpDiagnosticAnalyzers()
         {
