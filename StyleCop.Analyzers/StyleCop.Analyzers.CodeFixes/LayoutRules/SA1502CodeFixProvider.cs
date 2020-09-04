@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.LayoutRules
 {
@@ -115,11 +115,6 @@ namespace StyleCop.Analyzers.LayoutRules
         private SyntaxNode RegisterLocalFunctionStatementCodeFix(SyntaxNode syntaxRoot, LocalFunctionStatementSyntaxWrapper node, IndentationSettings indentationSettings)
         {
             return this.ReformatElement(syntaxRoot, node, node.Body.OpenBraceToken, node.Body.CloseBraceToken, indentationSettings);
-        }
-
-        private SyntaxNode RegisterEnumDeclarationCodeFix(SyntaxNode syntaxRoot, EnumDeclarationSyntax node, IndentationSettings indentationSettings)
-        {
-            return this.ReformatElement(syntaxRoot, node, node.OpenBraceToken, node.CloseBraceToken, indentationSettings);
         }
 
         private SyntaxNode RegisterNamespaceDeclarationCodeFix(SyntaxNode syntaxRoot, NamespaceDeclarationSyntax node, IndentationSettings indentationSettings)

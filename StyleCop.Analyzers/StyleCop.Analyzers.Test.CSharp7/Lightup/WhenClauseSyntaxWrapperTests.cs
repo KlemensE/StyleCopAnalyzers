@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.CSharp7.Lightup
 {
@@ -45,7 +45,7 @@ namespace StyleCop.Analyzers.Test.CSharp7.Lightup
             var newWhenKeyword = SyntaxFactory.Token(SyntaxKind.WhenKeyword).WithLeadingTrivia(SyntaxFactory.Space);
             var wrapperWithModifiedWhenKeyword = wrapper.WithWhenKeyword(newWhenKeyword);
             Assert.NotNull(wrapperWithModifiedWhenKeyword.SyntaxNode);
-            Assert.Equal(1, wrapperWithModifiedWhenKeyword.WhenKeyword.LeadingTrivia.Count);
+            Assert.Single(wrapperWithModifiedWhenKeyword.WhenKeyword.LeadingTrivia);
             Assert.Equal(" ", wrapperWithModifiedWhenKeyword.WhenKeyword.LeadingTrivia.ToString());
         }
 

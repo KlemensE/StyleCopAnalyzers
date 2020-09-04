@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.OrderingRules
 {
@@ -10,7 +10,7 @@ namespace StyleCop.Analyzers.OrderingRules
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Diagnostics;
-    using Settings.ObjectModel;
+    using StyleCop.Analyzers.Settings.ObjectModel;
 
     /// <summary>
     /// A C# using directive is placed outside of a namespace element.
@@ -51,10 +51,10 @@ namespace StyleCop.Analyzers.OrderingRules
     /// outside of the namespace, including:</para>
     ///
     /// <list type="number">
-    /// <item>Placing using-alias directives within the namespace eliminates compiler confusion between conflicting
-    /// types.</item>
-    /// <item>When multiple namespaces are defined within a single file, placing using directives within the namespace
-    /// elements scopes references and aliases.</item>
+    /// <item><description>Placing using-alias directives within the namespace eliminates compiler confusion between
+    /// conflicting types.</description></item>
+    /// <item><description>When multiple namespaces are defined within a single file, placing using directives within
+    /// the namespace elements scopes references and aliases.</description></item>
     /// </list>
     ///
     /// <h2>1. Eliminating Type Confusion</h2>
@@ -113,7 +113,7 @@ namespace StyleCop.Analyzers.OrderingRules
     /// </code>
     ///
     /// <para>The code fails on the following compiler error, found on the line containing
-    /// <c>Guid g = new Guid("hello");</c></para>
+    /// <c>Guid g = new Guid("hello");</c>:</para>
     ///
     /// <quote>CS0576: Namespace 'Microsoft.Sample' contains a definition conflicting with alias 'Guid'</quote>
     ///
@@ -157,19 +157,23 @@ namespace StyleCop.Analyzers.OrderingRules
         /// </summary>
         public const string DiagnosticId = "SA1200";
 
+        private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1200.md";
+
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(OrderingResources.SA1200Title), OrderingResources.ResourceManager, typeof(OrderingResources));
+
+        private static readonly LocalizableString MessageFormatInside = new LocalizableResourceString(nameof(OrderingResources.SA1200MessageFormatInside), OrderingResources.ResourceManager, typeof(OrderingResources));
+        private static readonly LocalizableString DescriptionInside = new LocalizableResourceString(nameof(OrderingResources.SA1200DescriptionInside), OrderingResources.ResourceManager, typeof(OrderingResources));
+
+        private static readonly LocalizableString MessageFormatOutside = new LocalizableResourceString(nameof(OrderingResources.SA1200MessageFormatOutside), OrderingResources.ResourceManager, typeof(OrderingResources));
+        private static readonly LocalizableString DescriptionOutside = new LocalizableResourceString(nameof(OrderingResources.SA1200DescriptionOutside), OrderingResources.ResourceManager, typeof(OrderingResources));
+
+#pragma warning disable SA1202 // Elements should be ordered by access
         internal static readonly DiagnosticDescriptor DescriptorInside =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormatInside, AnalyzerCategory.OrderingRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, DescriptionInside, HelpLink);
 
         internal static readonly DiagnosticDescriptor DescriptorOutside =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormatOutside, AnalyzerCategory.OrderingRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, DescriptionOutside, HelpLink);
-
-        private const string Title = "Using directives should be placed correctly";
-        private const string MessageFormatInside = "Using directive should appear within a namespace declaration";
-        private const string DescriptionInside = "A C# using directive is placed outside of a namespace element.";
-        private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1200.md";
-
-        private const string MessageFormatOutside = "Using directive should appear outside a namespace declaration";
-        private const string DescriptionOutside = "A C# using directive is placed inside of a namespace declaration.";
+#pragma warning restore SA1202 // Elements should be ordered by access
 
         private static readonly Action<SyntaxNodeAnalysisContext, StyleCopSettings> CompilationUnitAction = HandleCompilationUnit;
         private static readonly Action<SyntaxNodeAnalysisContext, StyleCopSettings> NamespaceDeclarationAction = HandleNamespaceDeclaration;
@@ -257,7 +261,9 @@ namespace StyleCop.Analyzers.OrderingRules
             foreach (UsingDirectiveSyntax directive in syntax.Usings)
             {
                 // Using directive should appear outside a namespace declaration
+#pragma warning disable RS1005 // ReportDiagnostic invoked with an unsupported DiagnosticDescriptor (https://github.com/dotnet/roslyn-analyzers/issues/4103)
                 context.ReportDiagnostic(Diagnostic.Create(DescriptorOutside, directive.GetLocation()));
+#pragma warning restore RS1005 // ReportDiagnostic invoked with an unsupported DiagnosticDescriptor
             }
         }
     }

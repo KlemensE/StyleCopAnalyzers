@@ -1,14 +1,14 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.SpacingRules
 {
     using System;
     using System.Collections.Immutable;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.Diagnostics;
+    using StyleCop.Analyzers.Helpers;
 
     /// <summary>
     /// The spacing around a semicolon is incorrect, within a C# code file.
@@ -26,10 +26,10 @@ namespace StyleCop.Analyzers.SpacingRules
         /// The ID for diagnostics produced by the <see cref="SA1002SemicolonsMustBeSpacedCorrectly"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1002";
-        private const string Title = "Semicolons should be spaced correctly";
-        private const string MessageFormat = "Semicolons should{0} be {1} by a space.";
-        private const string Description = "The spacing around a semicolon is incorrect, within a C# code file.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1002.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(SpacingResources.SA1002Title), SpacingResources.ResourceManager, typeof(SpacingResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(SpacingResources.SA1002MessageFormat), SpacingResources.ResourceManager, typeof(SpacingResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(SpacingResources.SA1002Description), SpacingResources.ResourceManager, typeof(SpacingResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.SpacingRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -106,6 +106,10 @@ namespace StyleCop.Analyzers.SpacingRules
                     }
 
                     break;
+
+                case SyntaxKind.None:
+                    // The semi colon is the last character in the file.
+                    return;
 
                 default:
                     break;

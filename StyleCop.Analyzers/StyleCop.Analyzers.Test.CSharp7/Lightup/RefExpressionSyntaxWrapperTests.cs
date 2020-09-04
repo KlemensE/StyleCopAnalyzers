@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.CSharp7.Lightup
 {
@@ -45,7 +45,7 @@ namespace StyleCop.Analyzers.Test.CSharp7.Lightup
             var newRefKeyword = SyntaxFactory.Token(SyntaxKind.RefKeyword).WithLeadingTrivia(SyntaxFactory.Space);
             var wrapperWithModifiedRefKeyword = wrapper.WithRefKeyword(newRefKeyword);
             Assert.NotNull(wrapperWithModifiedRefKeyword.SyntaxNode);
-            Assert.Equal(1, wrapperWithModifiedRefKeyword.RefKeyword.LeadingTrivia.Count);
+            Assert.Single(wrapperWithModifiedRefKeyword.RefKeyword.LeadingTrivia);
             Assert.Equal(" ", wrapperWithModifiedRefKeyword.RefKeyword.LeadingTrivia.ToString());
         }
 

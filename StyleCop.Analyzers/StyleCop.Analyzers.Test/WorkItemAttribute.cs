@@ -1,12 +1,12 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test
 {
     using System;
 
     /// <summary>
-    /// Used to tag test methods or types which are created for a given WorkItem
+    /// Used to tag test methods or types which are created for a given work item.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
     public sealed class WorkItemAttribute : Attribute

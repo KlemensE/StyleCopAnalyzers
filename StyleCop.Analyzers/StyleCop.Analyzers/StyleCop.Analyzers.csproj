@@ -20,21 +20,11 @@
 
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile Condition="'$(KeyConfiguration)' == 'Final'">..\..\build\keys\StyleCopAnalyzers.snk</AssemblyOriginatorKeyFile>
-    <AssemblyOriginatorKeyFile Condition="'$(KeyConfiguration)' != 'Final'">..\..\build\keys\StyleCopAnalyzers.dev.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(KeyConfiguration)' != 'Final'">
-    <DefineConstants>$(DefineConstants);DEVELOPMENT_KEY</DefineConstants>
+    <AssemblyOriginatorKeyFile>..\..\build\keys\StyleCopAnalyzers.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="1.2.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="**\*.md" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
-    <None Include="**\*.json" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
   </ItemGroup>
 
 </Project>

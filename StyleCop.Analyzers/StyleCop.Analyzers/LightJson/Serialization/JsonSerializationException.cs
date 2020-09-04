@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace LightJson.Serialization
 {
@@ -9,7 +9,7 @@ namespace LightJson.Serialization
     /// The exception that is thrown when a JSON value cannot be serialized.
     /// </summary>
     /// <remarks>
-    /// This exception is only intended to be thrown by LightJson.
+    /// <para>This exception is only intended to be thrown by LightJson.</para>
     /// </remarks>
     internal sealed class JsonSerializationException : Exception
     {

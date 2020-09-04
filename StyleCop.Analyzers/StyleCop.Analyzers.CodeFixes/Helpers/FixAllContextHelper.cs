@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Helpers
 {
@@ -117,11 +117,6 @@ namespace StyleCop.Analyzers.Helpers
             }
 
             return ImmutableDictionary<Project, ImmutableArray<Diagnostic>>.Empty;
-        }
-
-        public static async Task<ImmutableArray<Diagnostic>> GetAllDiagnosticsAsync(Compilation compilation, CompilationWithAnalyzers compilationWithAnalyzers, ImmutableArray<DiagnosticAnalyzer> analyzers, IEnumerable<Document> documents, bool includeCompilerDiagnostics, CancellationToken cancellationToken)
-        {
-            return await compilationWithAnalyzers.GetAllDiagnosticsAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>

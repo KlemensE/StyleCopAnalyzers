@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.OrderingRules
 {
@@ -18,11 +18,16 @@ namespace StyleCop.Analyzers.OrderingRules
     {
         /// <summary>
         /// Contains a map of the different regions of a source file.
-        /// Used source file regions are:
-        /// - conditional directives (#if, #else, #elif, #endif)
-        /// - pragma warning directives
-        /// - region directives
         /// </summary>
+        /// <remarks>
+        /// <para>Used source file regions are:</para>
+        ///
+        /// <list type="bullet">
+        /// <item><description>conditional directives (#if, #else, #elif, #endif)</description></item>
+        /// <item><description>pragma warning directives</description></item>
+        /// <item><description>region directives</description></item>
+        /// </list>
+        /// </remarks>
         private class SourceMap
         {
             private readonly TreeTextSpan regionRoot;
@@ -42,7 +47,7 @@ namespace StyleCop.Analyzers.OrderingRules
             internal TreeTextSpan ConditionalRoot { get; }
 
             /// <summary>
-            /// Constructs the directive map for the given <paramref name="compilationUnit"/>
+            /// Constructs the directive map for the given <paramref name="compilationUnit"/>.
             /// </summary>
             /// <param name="compilationUnit">The compilation unit to scan for directive trivia.</param>
             /// <returns>A new <see cref="SourceMap"/> object containing the directive trivia information from the passed <paramref name="compilationUnit"/>.</returns>
@@ -141,7 +146,7 @@ namespace StyleCop.Analyzers.OrderingRules
                     switch (directiveTrivia.Kind())
                     {
                     case SyntaxKind.IfDirectiveTrivia:
-                        AddNewDirectiveTriviaSpan(conditionalBuilder, conditionalStack, directiveTrivia);
+                        AddNewDirectiveTriviaSpan(conditionalStack, directiveTrivia);
                         break;
 
                     case SyntaxKind.ElifDirectiveTrivia:
@@ -149,19 +154,19 @@ namespace StyleCop.Analyzers.OrderingRules
                         var previousSpan = conditionalStack.Pop();
                         previousSpan.SetEnd(directiveTrivia.FullSpan.Start);
 
-                        AddNewDirectiveTriviaSpan(conditionalBuilder, conditionalStack, directiveTrivia);
+                        AddNewDirectiveTriviaSpan(conditionalStack, directiveTrivia);
                         break;
 
                     case SyntaxKind.EndIfDirectiveTrivia:
-                        CloseDirectiveTriviaSpan(conditionalBuilder, conditionalStack, directiveTrivia);
+                        CloseDirectiveTriviaSpan(conditionalStack, directiveTrivia);
                         break;
 
                     case SyntaxKind.RegionDirectiveTrivia:
-                        AddNewDirectiveTriviaSpan(regionBuilder, regionStack, directiveTrivia);
+                        AddNewDirectiveTriviaSpan(regionStack, directiveTrivia);
                         break;
 
                     case SyntaxKind.EndRegionDirectiveTrivia:
-                        CloseDirectiveTriviaSpan(regionBuilder, regionStack, directiveTrivia);
+                        CloseDirectiveTriviaSpan(regionStack, directiveTrivia);
                         break;
 
                     case SyntaxKind.PragmaWarningDirectiveTrivia:
@@ -187,14 +192,14 @@ namespace StyleCop.Analyzers.OrderingRules
                 return rootBuilder;
             }
 
-            private static void AddNewDirectiveTriviaSpan(TreeTextSpan.Builder spanBuilder, Stack<TreeTextSpan.Builder> spanStack, DirectiveTriviaSyntax directiveTrivia)
+            private static void AddNewDirectiveTriviaSpan(Stack<TreeTextSpan.Builder> spanStack, DirectiveTriviaSyntax directiveTrivia)
             {
                 var parent = spanStack.Peek();
                 var newDirectiveSpan = parent.AddChild(directiveTrivia.FullSpan.Start);
                 spanStack.Push(newDirectiveSpan);
             }
 
-            private static void CloseDirectiveTriviaSpan(TreeTextSpan.Builder spanBuilder, Stack<TreeTextSpan.Builder> spanStack, DirectiveTriviaSyntax directiveTrivia)
+            private static void CloseDirectiveTriviaSpan(Stack<TreeTextSpan.Builder> spanStack, DirectiveTriviaSyntax directiveTrivia)
             {
                 var previousSpan = spanStack.Pop();
                 previousSpan.SetEnd(directiveTrivia.FullSpan.End);

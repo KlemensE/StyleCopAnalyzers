@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.DocumentationRules
 {
@@ -10,11 +10,12 @@ namespace StyleCop.Analyzers.DocumentationRules
     using System.Linq;
     using System.Resources;
     using System.Xml.Linq;
-    using Helpers;
-    using Helpers.ObjectPools;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Diagnostics;
+    using StyleCop.Analyzers.Helpers;
+    using StyleCop.Analyzers.Helpers.ObjectPools;
+    using StyleCop.Analyzers.Settings.ObjectModel;
 
     /// <summary>
     /// The XML documentation for a C# element contains two or more identical entries, indicating that the documentation
@@ -43,7 +44,7 @@ namespace StyleCop.Analyzers.DocumentationRules
     /// <para>In some cases, a method may contain one or more parameters which are not used within the body of the
     /// method. In this case, the documentation for the parameter can be set to "The parameter is not used." StyleCop
     /// will allow multiple parameters to contain identical documentation as long as the documentation string is "The
-    /// parameter is not used."</para>
+    /// parameter is not used.".</para>
     ///
     /// <code language="csharp">
     /// /// &lt;summary&gt;
@@ -66,10 +67,10 @@ namespace StyleCop.Analyzers.DocumentationRules
         /// analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1625";
-        private const string Title = "Element documentation should not be copied and pasted";
-        private const string MessageFormat = "Element documentation should not be copied and pasted";
-        private const string Description = "The Xml documentation for a C# element contains two or more identical entries, indicating that the documentation has been copied and pasted. This can sometimes indicate invalid or poorly written documentation.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1625.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(DocumentationResources.SA1625Title), DocumentationResources.ResourceManager, typeof(DocumentationResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(DocumentationResources.SA1625MessageFormat), DocumentationResources.ResourceManager, typeof(DocumentationResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(DocumentationResources.SA1625Description), DocumentationResources.ResourceManager, typeof(DocumentationResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.DocumentationRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -84,11 +85,10 @@ namespace StyleCop.Analyzers.DocumentationRules
             ImmutableArray.Create(Descriptor);
 
         /// <inheritdoc/>
-        protected override void HandleXmlElement(SyntaxNodeAnalysisContext context, bool needsComment, IEnumerable<XmlNodeSyntax> syntaxList, params Location[] diagnosticLocations)
+        protected override void HandleXmlElement(SyntaxNodeAnalysisContext context, StyleCopSettings settings, bool needsComment, IEnumerable<XmlNodeSyntax> syntaxList, params Location[] diagnosticLocations)
         {
             var objectPool = SharedPools.Default<HashSet<string>>();
             HashSet<string> documentationTexts = objectPool.Allocate();
-            var settings = context.Options.GetStyleCopSettings(context.CancellationToken);
             var culture = new CultureInfo(settings.DocumentationRules.DocumentationCulture);
             var resourceManager = DocumentationResources.ResourceManager;
 

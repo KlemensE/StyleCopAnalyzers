@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.DocumentationRules
 {
@@ -9,12 +9,12 @@ namespace StyleCop.Analyzers.DocumentationRules
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using StyleCop.Analyzers.Helpers;
 
     /// <summary>
     /// Implements a code fix for <see cref="SA1651DoNotUsePlaceholderElements"/>.
@@ -57,8 +57,7 @@ namespace StyleCop.Analyzers.DocumentationRules
                     continue;
                 }
 
-                XmlElementSyntax xmlElementSyntax = syntax as XmlElementSyntax;
-                if (xmlElementSyntax == null)
+                if (!(syntax is XmlElementSyntax xmlElementSyntax))
                 {
                     // We continue even for placeholders if they are empty elements (XmlEmptyElementSyntax)
                     continue;
@@ -121,9 +120,7 @@ namespace StyleCop.Analyzers.DocumentationRules
 
                 foreach (var diagnostic in diagnostics)
                 {
-                    var xmlElement = syntaxRoot.FindNode(diagnostic.Location.SourceSpan, findInsideTrivia: true, getInnermostNodeForTie: true) as XmlElementSyntax;
-
-                    if ((xmlElement != null)
+                    if ((syntaxRoot.FindNode(diagnostic.Location.SourceSpan, findInsideTrivia: true, getInnermostNodeForTie: true) is XmlElementSyntax xmlElement)
                         && (xmlElement.Content.Count > 0)
                         && !string.IsNullOrWhiteSpace(xmlElement.Content.ToString()))
                     {

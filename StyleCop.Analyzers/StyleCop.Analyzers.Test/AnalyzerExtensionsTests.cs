@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test
 {
@@ -12,10 +12,10 @@ namespace StyleCop.Analyzers.Test
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Diagnostics;
     using StyleCop.Analyzers.SpecialRules;
-    using TestHelper;
+    using StyleCop.Analyzers.Test.Verifiers;
     using Xunit;
 
-    public class AnalyzerExtensionsTests : DiagnosticVerifier
+    public class AnalyzerExtensionsTests
     {
         private bool invokedBlockCallback;
         private bool invokedMethodDeclarationCallback;
@@ -32,14 +32,13 @@ class TypeName
 }
 ";
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await new CSharpTest(this)
+            {
+                TestCode = testCode,
+            }.RunAsync(CancellationToken.None).ConfigureAwait(false);
+
             Assert.True(this.invokedBlockCallback);
             Assert.True(this.invokedMethodDeclarationCallback);
-        }
-
-        protected override IEnumerable<DiagnosticAnalyzer> GetCSharpDiagnosticAnalyzers()
-        {
-            yield return new CompilationStartDiagnosticAnalyzer { AnalyzerExtensionsTests = this };
         }
 
         /// <summary>
@@ -70,6 +69,9 @@ class TypeName
 
             public override void Initialize(AnalysisContext context)
             {
+                context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+                context.EnableConcurrentExecution();
+
                 context.RegisterCompilationStartAction(
                     compilationStartContext =>
                     {
@@ -90,6 +92,21 @@ class TypeName
                             },
                             ImmutableArray.Create(SyntaxKind.MethodDeclaration));
                     });
+            }
+        }
+
+        private class CSharpTest : StyleCopDiagnosticVerifier<CompilationStartDiagnosticAnalyzer>.CSharpTest
+        {
+            private readonly AnalyzerExtensionsTests analyzerExtensionsTests;
+
+            public CSharpTest(AnalyzerExtensionsTests analyzerExtensionsTests)
+            {
+                this.analyzerExtensionsTests = analyzerExtensionsTests;
+            }
+
+            protected override IEnumerable<DiagnosticAnalyzer> GetDiagnosticAnalyzers()
+            {
+                yield return new CompilationStartDiagnosticAnalyzer { AnalyzerExtensionsTests = this.analyzerExtensionsTests };
             }
         }
     }

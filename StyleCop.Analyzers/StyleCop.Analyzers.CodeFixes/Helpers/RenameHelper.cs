@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Helpers
 {
@@ -56,8 +56,7 @@ namespace StyleCop.Analyzers.Helpers
             if (symbol.Kind == SymbolKind.TypeParameter)
             {
                 // If the symbol is a type parameter, the name can't be the same as any type parameters of the containing type.
-                var parentSymbol = containingSymbol?.ContainingSymbol as INamedTypeSymbol;
-                if (parentSymbol != null
+                if (containingSymbol?.ContainingSymbol is INamedTypeSymbol parentSymbol
                     && parentSymbol.TypeParameters.Any(t => t.Name == name))
                 {
                     return false;
@@ -67,8 +66,7 @@ namespace StyleCop.Analyzers.Helpers
                 containingSymbol = containingSymbol?.ContainingSymbol;
             }
 
-            var containingNamespaceOrTypeSymbol = containingSymbol as INamespaceOrTypeSymbol;
-            if (containingNamespaceOrTypeSymbol != null)
+            if (containingSymbol is INamespaceOrTypeSymbol containingNamespaceOrTypeSymbol)
             {
                 if (containingNamespaceOrTypeSymbol.Kind == SymbolKind.Namespace)
                 {
@@ -164,8 +162,7 @@ namespace StyleCop.Analyzers.Helpers
                     return parent;
 
                 default:
-                    var declarationParent = parent as MemberDeclarationSyntax;
-                    if (declarationParent != null)
+                    if (parent is MemberDeclarationSyntax declarationParent)
                     {
                         return declarationParent;
                     }

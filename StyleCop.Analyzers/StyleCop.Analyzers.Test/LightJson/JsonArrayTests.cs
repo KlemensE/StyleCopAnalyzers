@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.LightJson
 {
@@ -26,7 +26,7 @@ namespace StyleCop.Analyzers.Test.LightJson
             Assert.Equal(1, obj2[0].AsInteger);
             Assert.Equal("test2", obj2[1].AsString);
 
-            Assert.Throws<ArgumentNullException>("values", () => new JsonArray(default(JsonValue[])));
+            Assert.Throws<ArgumentNullException>("values", () => new JsonArray(default));
         }
 
         [Fact]

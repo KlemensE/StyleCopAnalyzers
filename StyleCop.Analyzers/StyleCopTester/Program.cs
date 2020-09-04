@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCopTester
 {
@@ -11,16 +11,16 @@ namespace StyleCopTester
     using System.Linq;
     using System.Reflection;
     using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows.Threading;
+    using Microsoft.Build.Locator;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Diagnostics;
     using Microsoft.CodeAnalysis.MSBuild;
-    using Microsoft.CodeAnalysis.Text;
-    using StyleCop.Analyzers.Helpers;
     using File = System.IO.File;
     using Path = System.IO.Path;
 
@@ -84,6 +84,8 @@ namespace StyleCopTester
                     }
                 }
 
+                MSBuildLocator.RegisterDefaults();
+
                 Stopwatch stopwatch = Stopwatch.StartNew();
                 var analyzers = GetAllAnalyzers();
 
@@ -95,9 +97,17 @@ namespace StyleCopTester
                     return;
                 }
 
+                var properties = new Dictionary<string, string>
+                {
+                    // This property ensures that XAML files will be compiled in the current AppDomain
+                    // rather than a separate one. Any tasks isolated in AppDomains or tasks that create
+                    // AppDomains will likely not work due to https://github.com/Microsoft/MSBuildLocator/issues/16.
+                    { "AlwaysCompileMarkupFilesInSeparateDomain", bool.FalseString },
+                };
+
                 MSBuildWorkspace workspace = MSBuildWorkspace.Create();
                 string solutionPath = args.SingleOrDefault(i => !i.StartsWith("/", StringComparison.Ordinal));
-                Solution solution = await workspace.OpenSolutionAsync(solutionPath, cancellationToken).ConfigureAwait(false);
+                Solution solution = await workspace.OpenSolutionAsync(solutionPath, cancellationToken: cancellationToken).ConfigureAwait(false);
 
                 Console.WriteLine($"Loaded solution in {stopwatch.ElapsedMilliseconds}ms");
 
@@ -119,10 +129,84 @@ namespace StyleCopTester
 
                 bool force = args.Contains("/force");
 
-                var diagnostics = await GetAnalyzerDiagnosticsAsync(solution, solutionPath, analyzers, force, cancellationToken).ConfigureAwait(true);
+                var diagnostics = await GetAnalyzerDiagnosticsAsync(solution, analyzers, force, cancellationToken).ConfigureAwait(true);
                 var allDiagnostics = diagnostics.SelectMany(i => i.Value).ToImmutableArray();
 
                 Console.WriteLine($"Found {allDiagnostics.Length} diagnostics in {stopwatch.ElapsedMilliseconds}ms");
+
+                bool testDocuments = args.Contains("/editperf") || args.Any(arg => arg.StartsWith("/editperf:"));
+                if (testDocuments)
+                {
+                    Func<string, bool> documentMatch = _ => true;
+                    string matchArg = args.FirstOrDefault(arg => arg.StartsWith("/editperf:"));
+                    if (matchArg != null)
+                    {
+                        Regex expression = new Regex(matchArg.Substring("/editperf:".Length), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                        documentMatch = documentPath => expression.IsMatch(documentPath);
+                    }
+
+                    int iterations = 10;
+                    string iterationsArg = args.FirstOrDefault(arg => arg.StartsWith("/edititer:"));
+                    if (iterationsArg != null)
+                    {
+                        iterations = int.Parse(iterationsArg.Substring("/edititer:".Length));
+                    }
+
+                    var projectPerformance = new Dictionary<ProjectId, double>();
+                    var documentPerformance = new Dictionary<DocumentId, DocumentAnalyzerPerformance>();
+                    foreach (var projectId in solution.ProjectIds)
+                    {
+                        Project project = solution.GetProject(projectId);
+                        if (project.Language != LanguageNames.CSharp)
+                        {
+                            continue;
+                        }
+
+                        foreach (var documentId in project.DocumentIds)
+                        {
+                            var document = project.GetDocument(documentId);
+                            if (!documentMatch(document.FilePath))
+                            {
+                                continue;
+                            }
+
+                            var currentDocumentPerformance = await TestDocumentPerformanceAsync(analyzers, project, documentId, iterations, force, cancellationToken).ConfigureAwait(false);
+                            Console.WriteLine($"{document.FilePath ?? document.Name}: {currentDocumentPerformance.EditsPerSecond:0.00}");
+                            documentPerformance.Add(documentId, currentDocumentPerformance);
+                        }
+
+                        double sumOfDocumentAverages = documentPerformance.Where(x => x.Key.ProjectId == projectId).Sum(x => x.Value.EditsPerSecond);
+                        double documentCount = documentPerformance.Where(x => x.Key.ProjectId == projectId).Count();
+                        if (documentCount > 0)
+                        {
+                            projectPerformance[project.Id] = sumOfDocumentAverages / documentCount;
+                        }
+                    }
+
+                    var slowestFiles = documentPerformance.OrderBy(pair => pair.Value.EditsPerSecond).GroupBy(pair => pair.Key.ProjectId);
+                    Console.WriteLine("Slowest files in each project:");
+                    foreach (var projectGroup in slowestFiles)
+                    {
+                        Console.WriteLine($"  {solution.GetProject(projectGroup.Key).Name}");
+                        foreach (var pair in projectGroup.Take(5))
+                        {
+                            var document = solution.GetDocument(pair.Key);
+                            Console.WriteLine($"    {document.FilePath ?? document.Name}: {pair.Value.EditsPerSecond:0.00}");
+                        }
+                    }
+
+                    foreach (var projectId in solution.ProjectIds)
+                    {
+                        double averageEditsInProject;
+                        if (!projectPerformance.TryGetValue(projectId, out averageEditsInProject))
+                        {
+                            continue;
+                        }
+
+                        Project project = solution.GetProject(projectId);
+                        Console.WriteLine($"{project.Name} ({project.DocumentIds.Count} documents): {averageEditsInProject:0.00} edits per second");
+                    }
+                }
 
                 foreach (var group in allDiagnostics.GroupBy(i => i.Id).OrderBy(i => i.Key, StringComparer.OrdinalIgnoreCase))
                 {
@@ -155,6 +239,44 @@ namespace StyleCopTester
                     await TestFixAllAsync(stopwatch, solution, diagnostics, applyChanges, cancellationToken).ConfigureAwait(true);
                 }
             }
+        }
+
+        private static async Task<DocumentAnalyzerPerformance> TestDocumentPerformanceAsync(ImmutableArray<DiagnosticAnalyzer> analyzers, Project project, DocumentId documentId, int iterations, bool force, CancellationToken cancellationToken)
+        {
+            var supportedDiagnosticsSpecificOptions = new Dictionary<string, ReportDiagnostic>();
+            if (force)
+            {
+                foreach (var analyzer in analyzers)
+                {
+                    foreach (var diagnostic in analyzer.SupportedDiagnostics)
+                    {
+                        // make sure the analyzers we are testing are enabled
+                        supportedDiagnosticsSpecificOptions[diagnostic.Id] = ReportDiagnostic.Default;
+                    }
+                }
+            }
+
+            // Report exceptions during the analysis process as errors
+            supportedDiagnosticsSpecificOptions.Add("AD0001", ReportDiagnostic.Error);
+
+            // update the project compilation options
+            var modifiedSpecificDiagnosticOptions = supportedDiagnosticsSpecificOptions.ToImmutableDictionary().SetItems(project.CompilationOptions.SpecificDiagnosticOptions);
+            var modifiedCompilationOptions = project.CompilationOptions.WithSpecificDiagnosticOptions(modifiedSpecificDiagnosticOptions);
+
+            var stopwatch = Stopwatch.StartNew();
+            for (int i = 0; i < iterations; i++)
+            {
+                var processedProject = project.WithCompilationOptions(modifiedCompilationOptions);
+
+                Compilation compilation = await processedProject.GetCompilationAsync(cancellationToken).ConfigureAwait(false);
+                CompilationWithAnalyzers compilationWithAnalyzers = compilation.WithAnalyzers(analyzers, new CompilationWithAnalyzersOptions(processedProject.AnalyzerOptions, null, true, false));
+
+                SyntaxTree tree = await project.GetDocument(documentId).GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
+                await compilationWithAnalyzers.GetAnalyzerSyntaxDiagnosticsAsync(tree, cancellationToken).ConfigureAwait(false);
+                await compilationWithAnalyzers.GetAnalyzerSemanticDiagnosticsAsync(compilation.GetSemanticModel(tree), null, cancellationToken).ConfigureAwait(false);
+            }
+
+            return new DocumentAnalyzerPerformance(iterations / stopwatch.Elapsed.TotalSeconds);
         }
 
         private static void WriteDiagnosticResults(ImmutableArray<Tuple<ProjectId, Diagnostic>> diagnostics, string fileName)
@@ -406,24 +528,7 @@ namespace StyleCopTester
             return providers.ToImmutableDictionary();
         }
 
-        private static ImmutableDictionary<FixAllProvider, ImmutableHashSet<string>> GetAllFixAllProviders(IEnumerable<CodeFixProvider> providers)
-        {
-            Dictionary<FixAllProvider, ImmutableHashSet<string>> fixAllProviders = new Dictionary<FixAllProvider, ImmutableHashSet<string>>();
-
-            foreach (var provider in providers)
-            {
-                var fixAllProvider = provider.GetFixAllProvider();
-                var supportedDiagnosticIds = fixAllProvider.GetSupportedFixAllDiagnosticIds(provider);
-                foreach (var id in supportedDiagnosticIds)
-                {
-                    fixAllProviders.AddToInnerSet(fixAllProvider, id);
-                }
-            }
-
-            return fixAllProviders.ToImmutableDictionary();
-        }
-
-        private static async Task<ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>>> GetAnalyzerDiagnosticsAsync(Solution solution, string solutionPath, ImmutableArray<DiagnosticAnalyzer> analyzers, bool force, CancellationToken cancellationToken)
+        private static async Task<ImmutableDictionary<ProjectId, ImmutableArray<Diagnostic>>> GetAnalyzerDiagnosticsAsync(Solution solution, ImmutableArray<DiagnosticAnalyzer> analyzers, bool force, CancellationToken cancellationToken)
         {
             List<KeyValuePair<ProjectId, Task<ImmutableArray<Diagnostic>>>> projectDiagnosticTasks = new List<KeyValuePair<ProjectId, Task<ImmutableArray<Diagnostic>>>>();
 
@@ -450,12 +555,12 @@ namespace StyleCopTester
         /// <summary>
         /// Returns a list of all analyzer diagnostics inside the specific project. This is an asynchronous operation.
         /// </summary>
-        /// <param name="analyzers">The list of analyzers that should be used</param>
-        /// <param name="project">The project that should be analyzed</param>
+        /// <param name="analyzers">The list of analyzers that should be used.</param>
+        /// <param name="project">The project that should be analyzed.</param>
         /// <param name="force"><see langword="true"/> to force the analyzers to be enabled; otherwise,
         /// <see langword="false"/> to use the behavior configured for the specified <paramref name="project"/>.</param>
         /// <param name="cancellationToken">The cancellation token that the task will observe.</param>
-        /// <returns>A list of diagnostics inside the project</returns>
+        /// <returns>A list of diagnostics inside the project.</returns>
         private static async Task<ImmutableArray<Diagnostic>> GetProjectAnalyzerDiagnosticsAsync(ImmutableArray<DiagnosticAnalyzer> analyzers, Project project, bool force, CancellationToken cancellationToken)
         {
             var supportedDiagnosticsSpecificOptions = new Dictionary<string, ReportDiagnostic>();
@@ -480,9 +585,9 @@ namespace StyleCopTester
             var processedProject = project.WithCompilationOptions(modifiedCompilationOptions);
 
             Compilation compilation = await processedProject.GetCompilationAsync(cancellationToken).ConfigureAwait(false);
-            CompilationWithAnalyzers compilationWithAnalyzers = compilation.WithAnalyzers(analyzers, new CompilationWithAnalyzersOptions(new AnalyzerOptions(ImmutableArray.Create<AdditionalText>()), null, true, false));
+            CompilationWithAnalyzers compilationWithAnalyzers = compilation.WithAnalyzers(analyzers, new CompilationWithAnalyzersOptions(processedProject.AnalyzerOptions, null, true, false));
 
-            var diagnostics = await FixAllContextHelper.GetAllDiagnosticsAsync(compilation, compilationWithAnalyzers, analyzers, project.Documents, true, cancellationToken).ConfigureAwait(false);
+            var diagnostics = await compilationWithAnalyzers.GetAllDiagnosticsAsync(cancellationToken).ConfigureAwait(false);
             return diagnostics;
         }
 
@@ -494,9 +599,24 @@ namespace StyleCopTester
             Console.WriteLine("/stats     Display statistics of the solution");
             Console.WriteLine("/codefixes Test single code fixes");
             Console.WriteLine("/fixall    Test fix all providers");
-            Console.WriteLine("/id:<id>   Enable analyzer with diagnostic ID < id > (when this is specified, only this analyzer is enabled)");
+            Console.WriteLine("/id:<id>   Enable analyzer with diagnostic ID <id> (when this is specified, only this analyzer is enabled)");
             Console.WriteLine("/apply     Write code fix changes back to disk");
             Console.WriteLine("/force     Force an analyzer to be enabled, regardless of the configured rule set(s) for the solution");
+            Console.WriteLine("/editperf[:<match>]     Test the incremental performance of analyzers to simulate the behavior of editing files. If <match> is specified, only files matching this regular expression are evaluated for editor performance.");
+            Console.WriteLine("/edititer:<iterations>  Specifies the number of iterations to use for testing documents with /editperf. When this is not specified, the default value is 10.");
+        }
+
+        private struct DocumentAnalyzerPerformance
+        {
+            public DocumentAnalyzerPerformance(double editsPerSecond)
+            {
+                this.EditsPerSecond = editsPerSecond;
+            }
+
+            public double EditsPerSecond
+            {
+                get;
+            }
         }
     }
 }

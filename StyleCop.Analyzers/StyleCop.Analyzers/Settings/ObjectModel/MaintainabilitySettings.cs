@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Settings.ObjectModel
 {
@@ -17,7 +17,7 @@ namespace StyleCop.Analyzers.Settings.ObjectModel
         /// <summary>
         /// This is the backing field for the <see cref="TopLevelTypes"/> property.
         /// </summary>
-        private ImmutableArray<TopLevelType>.Builder topLevelTypes;
+        private readonly ImmutableArray<TopLevelType>.Builder topLevelTypes;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MaintainabilitySettings"/> class.

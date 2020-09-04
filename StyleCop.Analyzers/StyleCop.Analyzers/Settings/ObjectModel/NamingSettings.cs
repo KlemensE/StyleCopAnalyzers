@@ -1,31 +1,37 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Settings.ObjectModel
 {
+    using System.Collections.Generic;
     using System.Collections.Immutable;
+    using System.Linq;
     using System.Text.RegularExpressions;
     using LightJson;
 
     internal class NamingSettings
     {
         /// <summary>
-        /// This is the backing field for the <see cref="AllowCommonHungarianPrefixes"/> property.
-        /// </summary>
-        private bool allowCommonHungarianPrefixes;
-
-        /// <summary>
         /// This is the backing field for the <see cref="AllowedHungarianPrefixes"/> property.
         /// </summary>
-        private ImmutableArray<string>.Builder allowedHungarianPrefixes;
+        private readonly ImmutableArray<string>.Builder allowedHungarianPrefixes;
+
+        /// <summary>
+        /// This is the backing field for the <see cref="AllowedNamespaceComponents"/> property.
+        /// </summary>
+        private readonly ImmutableArray<string>.Builder allowedNamespaceComponents;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NamingSettings"/> class.
         /// </summary>
         protected internal NamingSettings()
         {
-            this.allowCommonHungarianPrefixes = true;
+            this.AllowCommonHungarianPrefixes = true;
             this.allowedHungarianPrefixes = ImmutableArray.CreateBuilder<string>();
+            this.allowedNamespaceComponents = ImmutableArray.CreateBuilder<string>();
+
+            this.IncludeInferredTupleElementNames = false;
+            this.TupleElementNameCasing = TupleElementNameCase.PascalCase;
         }
 
         /// <summary>
@@ -40,7 +46,7 @@ namespace StyleCop.Analyzers.Settings.ObjectModel
                 switch (kvp.Key)
                 {
                 case "allowCommonHungarianPrefixes":
-                    this.allowCommonHungarianPrefixes = kvp.ToBooleanValue();
+                    this.AllowCommonHungarianPrefixes = kvp.ToBooleanValue();
                     break;
 
                 case "allowedHungarianPrefixes":
@@ -59,21 +65,35 @@ namespace StyleCop.Analyzers.Settings.ObjectModel
 
                     break;
 
+                case "allowedNamespaceComponents":
+                    kvp.AssertIsArray();
+                    this.allowedNamespaceComponents.AddRange(kvp.Value.AsJsonArray.Select(x => x.ToStringValue(kvp.Key)));
+                    break;
+
+                case "includeInferredTupleElementNames":
+                    this.IncludeInferredTupleElementNames = kvp.ToBooleanValue();
+                    break;
+
+                case "tupleElementNameCasing":
+                    this.TupleElementNameCasing = kvp.ToEnumValue<TupleElementNameCase>();
+                    break;
+
                 default:
                     break;
                 }
             }
         }
 
-        public bool AllowCommonHungarianPrefixes =>
-            this.allowCommonHungarianPrefixes;
+        public bool AllowCommonHungarianPrefixes { get; }
 
         public ImmutableArray<string> AllowedHungarianPrefixes
-        {
-            get
-            {
-                return this.allowedHungarianPrefixes.ToImmutable();
-            }
-        }
+            => this.allowedHungarianPrefixes.ToImmutable();
+
+        public ImmutableArray<string> AllowedNamespaceComponents
+            => this.allowedNamespaceComponents.ToImmutable();
+
+        public bool IncludeInferredTupleElementNames { get; }
+
+        public TupleElementNameCase TupleElementNameCasing { get; }
     }
 }

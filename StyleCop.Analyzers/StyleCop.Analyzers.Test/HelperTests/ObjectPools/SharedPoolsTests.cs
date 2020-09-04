@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.HelperTests.ObjectPools
 {
@@ -10,6 +10,7 @@ namespace StyleCop.Analyzers.Test.HelperTests.ObjectPools
     using StyleCop.Analyzers.Helpers.ObjectPools;
     using Xunit;
 
+    [Collection(nameof(SequentialTestCollection))]
     public class SharedPoolsTests
     {
         [Fact]
@@ -68,10 +69,10 @@ namespace StyleCop.Analyzers.Test.HelperTests.ObjectPools
 
                 // Keep a copy to verify its length is reset
                 collection = obj.Object;
-                Assert.NotEqual(0, collection.Count);
+                Assert.NotEmpty(collection);
             }
 
-            Assert.Equal(0, collection.Count);
+            Assert.Empty(collection);
         }
 
         [Fact]
@@ -87,10 +88,10 @@ namespace StyleCop.Analyzers.Test.HelperTests.ObjectPools
 
                 // Keep a copy to verify its length is reset
                 collection = obj.Object;
-                Assert.NotEqual(0, collection.Count);
+                Assert.NotEmpty(collection);
             }
 
-            Assert.Equal(0, collection.Count);
+            Assert.Empty(collection);
         }
 
         [Fact]
@@ -106,10 +107,10 @@ namespace StyleCop.Analyzers.Test.HelperTests.ObjectPools
 
                 // Keep a copy to verify its length is reset
                 collection = obj.Object;
-                Assert.NotEqual(0, collection.Count);
+                Assert.NotEmpty(collection);
             }
 
-            Assert.Equal(0, collection.Count);
+            Assert.Empty(collection);
         }
 
         [Fact]
@@ -125,10 +126,10 @@ namespace StyleCop.Analyzers.Test.HelperTests.ObjectPools
 
                 // Keep a copy to verify its length is reset
                 collection = obj.Object;
-                Assert.NotEqual(0, collection.Count);
+                Assert.NotEmpty(collection);
             }
 
-            Assert.Equal(0, collection.Count);
+            Assert.Empty(collection);
         }
 
         [Fact]
@@ -144,10 +145,10 @@ namespace StyleCop.Analyzers.Test.HelperTests.ObjectPools
 
                 // Keep a copy to verify its length is reset
                 collection = obj.Object;
-                Assert.NotEqual(0, collection.Count);
+                Assert.NotEmpty(collection);
             }
 
-            Assert.Equal(0, collection.Count);
+            Assert.Empty(collection);
         }
 
         [Fact]
@@ -182,17 +183,17 @@ namespace StyleCop.Analyzers.Test.HelperTests.ObjectPools
             // HashSet<int>
             var set = new HashSet<int>(Enumerable.Range(0, 1024));
             SharedPools.Default<HashSet<int>>().ClearAndFree(set);
-            Assert.Equal(0, set.Count);
+            Assert.Empty(set);
 
             // Stack<int>
             var stack = new Stack<int>(Enumerable.Range(0, 1024));
             SharedPools.Default<Stack<int>>().ClearAndFree(stack);
-            Assert.Equal(0, stack.Count);
+            Assert.Empty(stack);
 
             // Queue<int>
             var queue = new Queue<int>(Enumerable.Range(0, 1024));
             SharedPools.Default<Queue<int>>().ClearAndFree(queue);
-            Assert.Equal(0, queue.Count);
+            Assert.Empty(queue);
 
             // Dictionary<int, int> **This one doesn't go back in the pool!**
             var dictionary = Enumerable.Range(0, 1024).ToDictionary(i => i);
@@ -203,19 +204,38 @@ namespace StyleCop.Analyzers.Test.HelperTests.ObjectPools
             var list = new List<int>(Enumerable.Range(0, 1024));
             Assert.True(list.Capacity >= 1024);
             SharedPools.Default<List<int>>().ClearAndFree(list);
-            Assert.Equal(0, list.Count);
+            Assert.Empty(list);
             Assert.True(list.Capacity < 1024);
         }
 
         [Fact]
         public void TestPooledObjectHandlesNullAllocation()
         {
-            Func<ObjectPool<object>, object> allocator = pool => null;
-            Action<ObjectPool<object>, object> releaser = (pool, obj) => { };
-            using (var obj = new PooledObject<object>(SharedPools.Default<object>(), allocator, releaser))
+            object NullAllocator(ObjectPool<object> pool)
+                => null;
+
+            object NonNullAllocator(ObjectPool<object> pool)
+                => new object();
+
+            bool releaserCalled = false;
+            void Releaser(ObjectPool<object> pool, object obj)
+            {
+                releaserCalled = true;
+            }
+
+            using (var obj = new PooledObject<object>(SharedPools.Default<object>(), NullAllocator, Releaser))
             {
                 Assert.Null(obj.Object);
             }
+
+            Assert.False(releaserCalled);
+
+            using (var obj = new PooledObject<object>(SharedPools.Default<object>(), NonNullAllocator, Releaser))
+            {
+                Assert.NotNull(obj.Object);
+            }
+
+            Assert.True(releaserCalled);
         }
     }
 }

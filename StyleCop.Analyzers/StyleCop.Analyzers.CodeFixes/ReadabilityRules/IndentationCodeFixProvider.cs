@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.ReadabilityRules
 {
@@ -8,11 +8,11 @@ namespace StyleCop.Analyzers.ReadabilityRules
     using System.Composition;
     using System.Threading;
     using System.Threading.Tasks;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Text;
+    using StyleCop.Analyzers.Helpers;
 
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(IndentationCodeFixProvider))]
     [Shared]
@@ -61,14 +61,14 @@ namespace StyleCop.Analyzers.ReadabilityRules
             string replacement;
             if (!diagnostic.Properties.TryGetValue(SA1137ElementsShouldHaveTheSameIndentation.ExpectedIndentationKey, out replacement))
             {
-                textChange = default(TextChange);
+                textChange = default;
                 return false;
             }
 
             var trivia = syntaxRoot.FindTrivia(diagnostic.Location.SourceSpan.Start);
 
             TextSpan originalSpan;
-            if (trivia == default(SyntaxTrivia))
+            if (trivia == default)
             {
                 // The warning was reported on a token because the line is not indented
                 originalSpan = new TextSpan(diagnostic.Location.SourceSpan.Start, 0);

@@ -1,18 +1,17 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Lightup
 {
     using System;
-    using System.Reflection;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
 
     internal struct TupleElementSyntaxWrapper : ISyntaxWrapper<CSharpSyntaxNode>
     {
-        private const string TupleElementSyntaxTypeName = "Microsoft.CodeAnalysis.CSharp.Syntax.TupleElementSyntax";
-        private static readonly Type TupleElementSyntaxType;
+        internal const string WrappedTypeName = "Microsoft.CodeAnalysis.CSharp.Syntax.TupleElementSyntax";
+        private static readonly Type WrappedType;
 
         private static readonly Func<CSharpSyntaxNode, SyntaxToken> IdentifierAccessor;
         private static readonly Func<CSharpSyntaxNode, TypeSyntax> TypeAccessor;
@@ -23,11 +22,11 @@ namespace StyleCop.Analyzers.Lightup
 
         static TupleElementSyntaxWrapper()
         {
-            TupleElementSyntaxType = typeof(CSharpSyntaxNode).GetTypeInfo().Assembly.GetType(TupleElementSyntaxTypeName);
-            IdentifierAccessor = LightupHelpers.CreateSyntaxPropertyAccessor<CSharpSyntaxNode, SyntaxToken>(TupleElementSyntaxType, nameof(Identifier));
-            TypeAccessor = LightupHelpers.CreateSyntaxPropertyAccessor<CSharpSyntaxNode, TypeSyntax>(TupleElementSyntaxType, nameof(Type));
-            WithIdentifierAccessor = LightupHelpers.CreateSyntaxWithPropertyAccessor<CSharpSyntaxNode, SyntaxToken>(TupleElementSyntaxType, nameof(Identifier));
-            WithTypeAccessor = LightupHelpers.CreateSyntaxWithPropertyAccessor<CSharpSyntaxNode, TypeSyntax>(TupleElementSyntaxType, nameof(Type));
+            WrappedType = WrapperHelper.GetWrappedType(typeof(TupleElementSyntaxWrapper));
+            IdentifierAccessor = LightupHelpers.CreateSyntaxPropertyAccessor<CSharpSyntaxNode, SyntaxToken>(WrappedType, nameof(Identifier));
+            TypeAccessor = LightupHelpers.CreateSyntaxPropertyAccessor<CSharpSyntaxNode, TypeSyntax>(WrappedType, nameof(Type));
+            WithIdentifierAccessor = LightupHelpers.CreateSyntaxWithPropertyAccessor<CSharpSyntaxNode, SyntaxToken>(WrappedType, nameof(Identifier));
+            WithTypeAccessor = LightupHelpers.CreateSyntaxWithPropertyAccessor<CSharpSyntaxNode, TypeSyntax>(WrappedType, nameof(Type));
         }
 
         private TupleElementSyntaxWrapper(CSharpSyntaxNode node)
@@ -57,12 +56,12 @@ namespace StyleCop.Analyzers.Lightup
         {
             if (node == null)
             {
-                return default(TupleElementSyntaxWrapper);
+                return default;
             }
 
             if (!IsInstance(node))
             {
-                throw new InvalidCastException($"Cannot cast '{node.GetType().FullName}' to '{TupleElementSyntaxTypeName}'");
+                throw new InvalidCastException($"Cannot cast '{node.GetType().FullName}' to '{WrappedTypeName}'");
             }
 
             return new TupleElementSyntaxWrapper((CSharpSyntaxNode)node);
@@ -75,7 +74,7 @@ namespace StyleCop.Analyzers.Lightup
 
         public static bool IsInstance(SyntaxNode node)
         {
-            return node != null && LightupHelpers.CanWrapNode(node, TupleElementSyntaxType);
+            return node != null && LightupHelpers.CanWrapNode(node, WrappedType);
         }
 
         public TupleElementSyntaxWrapper WithIdentifier(SyntaxToken identifier)

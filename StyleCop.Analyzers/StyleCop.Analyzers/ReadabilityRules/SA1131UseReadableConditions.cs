@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.ReadabilityRules
 {
@@ -9,6 +9,7 @@ namespace StyleCop.Analyzers.ReadabilityRules
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Diagnostics;
+    using StyleCop.Analyzers.Lightup;
 
     /// <summary>
     /// A comparison was made between a variable and a literal or constant value, and the variable appeared on the
@@ -21,10 +22,10 @@ namespace StyleCop.Analyzers.ReadabilityRules
         /// The ID for diagnostics produced by the <see cref="SA1131UseReadableConditions"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1131";
+        private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1131.md";
         private static readonly LocalizableString Title = new LocalizableResourceString(nameof(ReadabilityResources.SA1131Title), ReadabilityResources.ResourceManager, typeof(ReadabilityResources));
         private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(ReadabilityResources.SA1131MessageFormat), ReadabilityResources.ResourceManager, typeof(ReadabilityResources));
         private static readonly LocalizableString Description = new LocalizableResourceString(nameof(ReadabilityResources.SA1131Description), ReadabilityResources.ResourceManager, typeof(ReadabilityResources));
-        private static readonly string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1131.md";
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.ReadabilityRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -68,7 +69,7 @@ namespace StyleCop.Analyzers.ReadabilityRules
         private static bool IsLiteral(ExpressionSyntax expression, SemanticModel semanticModel)
         {
             // Default expressions are most of the time constants, but not for default(MyStruct).
-            if (expression.IsKind(SyntaxKind.DefaultExpression))
+            if (expression.IsKind(SyntaxKind.DefaultExpression) || expression.IsKind(SyntaxKindEx.DefaultLiteralExpression))
             {
                 return true;
             }
@@ -79,9 +80,7 @@ namespace StyleCop.Analyzers.ReadabilityRules
                 return true;
             }
 
-            IFieldSymbol fieldSymbol = semanticModel.GetSymbolInfo(expression).Symbol as IFieldSymbol;
-
-            if (fieldSymbol != null)
+            if (semanticModel.GetSymbolInfo(expression).Symbol is IFieldSymbol fieldSymbol)
             {
                 return fieldSymbol.IsStatic && fieldSymbol.IsReadOnly;
             }

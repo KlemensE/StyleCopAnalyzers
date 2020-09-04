@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.LayoutRules
 {
@@ -7,12 +7,12 @@ namespace StyleCop.Analyzers.LayoutRules
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Diagnostics;
     using Microsoft.CodeAnalysis.Text;
+    using StyleCop.Analyzers.Helpers;
     using StyleCop.Analyzers.Settings.ObjectModel;
 
     /// <summary>
@@ -71,6 +71,8 @@ namespace StyleCop.Analyzers.LayoutRules
         internal const string RemoveBlankLinesValue = "RemoveBlankLines";
         internal const string InsertBlankLineValue = "InsertBlankLine";
 
+        private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1516.md";
+
         private static readonly LocalizableString Title = new LocalizableResourceString(nameof(LayoutResources.SA1516Title), LayoutResources.ResourceManager, typeof(LayoutResources));
 
         private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(LayoutResources.SA1516MessageFormat), LayoutResources.ResourceManager, typeof(LayoutResources));
@@ -79,8 +81,6 @@ namespace StyleCop.Analyzers.LayoutRules
         private static readonly LocalizableString DescriptionRequire = new LocalizableResourceString(nameof(LayoutResources.SA1516DescriptionRequire), LayoutResources.ResourceManager, typeof(LayoutResources));
         private static readonly LocalizableString MessageFormatOmit = new LocalizableResourceString(nameof(LayoutResources.SA1516MessageFormatOmit), LayoutResources.ResourceManager, typeof(LayoutResources));
         private static readonly LocalizableString DescriptionOmit = new LocalizableResourceString(nameof(LayoutResources.SA1516DescriptionOmit), LayoutResources.ResourceManager, typeof(LayoutResources));
-
-        private static readonly string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1516.md";
 
         private static readonly Action<SyntaxNodeAnalysisContext> TypeDeclarationAction = HandleTypeDeclaration;
         private static readonly Action<SyntaxNodeAnalysisContext, StyleCopSettings> CompilationUnitAction = HandleCompilationUnit;
@@ -158,61 +158,73 @@ namespace StyleCop.Analyzers.LayoutRules
 
         private static void HandleTypeDeclaration(SyntaxNodeAnalysisContext context)
         {
-            var typeDeclaration = context.Node as TypeDeclarationSyntax;
+            var typeDeclaration = (TypeDeclarationSyntax)context.Node;
 
-            if (typeDeclaration != null)
-            {
-                var members = typeDeclaration.Members;
+            var members = typeDeclaration.Members;
 
-                HandleMemberList(context, members);
-            }
+            HandleMemberList(context, members);
         }
 
         private static void HandleCompilationUnit(SyntaxNodeAnalysisContext context, StyleCopSettings settings)
         {
-            var compilationUnit = context.Node as CompilationUnitSyntax;
+            var compilationUnit = (CompilationUnitSyntax)context.Node;
 
-            if (compilationUnit != null)
+            var externs = compilationUnit.Externs;
+            var usings = compilationUnit.Usings;
+            var attributeLists = compilationUnit.AttributeLists;
+            var members = compilationUnit.Members;
+
+            HandleUsings(context, usings, settings);
+            HandleMemberList(context, members);
+
+            SyntaxNode previousItem = externs.LastOrDefault();
+            if (usings.Any())
             {
-                var usings = compilationUnit.Usings;
-                var members = compilationUnit.Members;
-
-                HandleUsings(context, usings, settings);
-                HandleMemberList(context, members);
-
-                if (members.Count > 0 && compilationUnit.Usings.Count > 0)
+                if (previousItem != null)
                 {
-                    ReportIfThereIsNoBlankLine(context, usings[usings.Count - 1], members[0]);
+                    ReportIfThereIsNoBlankLine(context, previousItem, usings[0]);
                 }
 
-                if (compilationUnit.Usings.Count > 0 && compilationUnit.Externs.Count > 0)
+                previousItem = usings.Last();
+            }
+
+            if (attributeLists.Any())
+            {
+                if (previousItem != null)
                 {
-                    ReportIfThereIsNoBlankLine(context, compilationUnit.Externs[compilationUnit.Externs.Count - 1], compilationUnit.Usings[0]);
+                    ReportIfThereIsNoBlankLine(context, previousItem, attributeLists[0]);
+                }
+
+                previousItem = attributeLists.Last();
+            }
+
+            if (members.Any())
+            {
+                if (previousItem != null)
+                {
+                    ReportIfThereIsNoBlankLine(context, previousItem, members[0]);
                 }
             }
         }
 
         private static void HandleNamespaceDeclaration(SyntaxNodeAnalysisContext context, StyleCopSettings settings)
         {
-            var namespaceDeclaration = context.Node as NamespaceDeclarationSyntax;
+            var namespaceDeclaration = (NamespaceDeclarationSyntax)context.Node;
 
-            if (namespaceDeclaration != null)
+            var usings = namespaceDeclaration.Usings;
+            var members = namespaceDeclaration.Members;
+
+            HandleUsings(context, usings, settings);
+            HandleMemberList(context, members);
+
+            if (members.Count > 0 && namespaceDeclaration.Usings.Count > 0)
             {
-                var usings = namespaceDeclaration.Usings;
-                var members = namespaceDeclaration.Members;
+                ReportIfThereIsNoBlankLine(context, usings[usings.Count - 1], members[0]);
+            }
 
-                HandleUsings(context, usings, settings);
-                HandleMemberList(context, members);
-
-                if (members.Count > 0 && namespaceDeclaration.Usings.Count > 0)
-                {
-                    ReportIfThereIsNoBlankLine(context, usings[usings.Count - 1], members[0]);
-                }
-
-                if (namespaceDeclaration.Usings.Count > 0 && namespaceDeclaration.Externs.Count > 0)
-                {
-                    ReportIfThereIsNoBlankLine(context, namespaceDeclaration.Externs[namespaceDeclaration.Externs.Count - 1], namespaceDeclaration.Usings[0]);
-                }
+            if (namespaceDeclaration.Usings.Count > 0 && namespaceDeclaration.Externs.Count > 0)
+            {
+                ReportIfThereIsNoBlankLine(context, namespaceDeclaration.Externs[namespaceDeclaration.Externs.Count - 1], namespaceDeclaration.Usings[0]);
             }
         }
 
@@ -355,7 +367,7 @@ namespace StyleCop.Analyzers.LayoutRules
             }
 
             var firstToken = node.ChildTokens().FirstOrDefault();
-            if (firstToken != default(SyntaxToken))
+            if (firstToken != default)
             {
                 return node.ChildTokens().First().GetLocation();
             }
@@ -367,7 +379,7 @@ namespace StyleCop.Analyzers.LayoutRules
         {
             allTrivia = allTrivia.Where(x => !x.IsKind(SyntaxKind.WhitespaceTrivia));
 
-            SyntaxTrivia previousTrivia = default(SyntaxTrivia);
+            SyntaxTrivia previousTrivia = default;
 
             foreach (var trivia in allTrivia)
             {

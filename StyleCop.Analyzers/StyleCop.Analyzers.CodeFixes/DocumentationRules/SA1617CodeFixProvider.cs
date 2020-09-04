@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.DocumentationRules
 {
@@ -83,8 +83,8 @@ namespace StyleCop.Analyzers.DocumentationRules
             List<SyntaxNode> nodesToFix = new List<SyntaxNode>();
             nodesToFix.Add(returnsElement);
 
-            var previousAsTextSyntax = previous as XmlTextSyntax;
-            if (previousAsTextSyntax != null && XmlCommentHelper.IsConsideredEmpty(previousAsTextSyntax))
+            if (previous is XmlTextSyntax previousAsTextSyntax
+                && XmlCommentHelper.IsConsideredEmpty(previousAsTextSyntax))
             {
                 nodesToFix.Add(previous);
             }

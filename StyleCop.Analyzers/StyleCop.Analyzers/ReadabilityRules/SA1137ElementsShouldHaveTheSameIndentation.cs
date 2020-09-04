@@ -1,16 +1,18 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.ReadabilityRules
 {
     using System;
+    using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Diagnostics;
+    using StyleCop.Analyzers.Helpers;
+    using StyleCop.Analyzers.Lightup;
 
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     internal class SA1137ElementsShouldHaveTheSameIndentation : DiagnosticAnalyzer
@@ -21,10 +23,10 @@ namespace StyleCop.Analyzers.ReadabilityRules
         /// The ID for diagnostics produced by the <see cref="SA1137ElementsShouldHaveTheSameIndentation"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1137";
+        private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1137.md";
         private static readonly LocalizableString Title = new LocalizableResourceString(nameof(ReadabilityResources.SA1137Title), ReadabilityResources.ResourceManager, typeof(ReadabilityResources));
         private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(ReadabilityResources.SA1137MessageFormat), ReadabilityResources.ResourceManager, typeof(ReadabilityResources));
         private static readonly LocalizableString Description = new LocalizableResourceString(nameof(ReadabilityResources.SA1137Description), ReadabilityResources.ResourceManager, typeof(ReadabilityResources));
-        private static readonly string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1137.md";
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.ReadabilityRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -45,6 +47,8 @@ namespace StyleCop.Analyzers.ReadabilityRules
         private static readonly Action<SyntaxNodeAnalysisContext> SwitchStatementAction = HandleSwitchStatement;
         private static readonly Action<SyntaxNodeAnalysisContext> InitializerExpressionAction = HandleInitializerExpression;
         private static readonly Action<SyntaxNodeAnalysisContext> AnonymousObjectCreationExpressionAction = HandleAnonymousObjectCreationExpression;
+        private static readonly Action<SyntaxNodeAnalysisContext> TupleTypeAction = HandleTupleType;
+        private static readonly Action<SyntaxNodeAnalysisContext> TupleExpressionAction = HandleTupleExpression;
 
         /// <inheritdoc/>
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
@@ -72,6 +76,8 @@ namespace StyleCop.Analyzers.ReadabilityRules
             context.RegisterSyntaxNodeAction(SwitchStatementAction, SyntaxKind.SwitchStatement);
             context.RegisterSyntaxNodeAction(InitializerExpressionAction, SyntaxKinds.InitializerExpression);
             context.RegisterSyntaxNodeAction(AnonymousObjectCreationExpressionAction, SyntaxKind.AnonymousObjectCreationExpression);
+            context.RegisterSyntaxNodeAction(TupleTypeAction, SyntaxKindEx.TupleType);
+            context.RegisterSyntaxNodeAction(TupleExpressionAction, SyntaxKindEx.TupleExpression);
         }
 
         private static void HandleCompilationUnit(SyntaxNodeAnalysisContext context)
@@ -217,9 +223,16 @@ namespace StyleCop.Analyzers.ReadabilityRules
             var labels = ImmutableList.CreateBuilder<SwitchLabelSyntax>();
             var statements = ImmutableList.CreateBuilder<StatementSyntax>();
             var labeledStatements = ImmutableList.CreateBuilder<StatementSyntax>();
+            var blockStatements = ImmutableList.CreateBuilder<BlockSyntax>();
             foreach (SwitchSectionSyntax switchSection in switchStatement.Sections)
             {
                 labels.AddRange(switchSection.Labels);
+                if (switchSection.Statements.Count == 1 && switchSection.Statements[0].IsKind(SyntaxKind.Block))
+                {
+                    blockStatements.Add((BlockSyntax)switchSection.Statements[0]);
+                    continue;
+                }
+
                 foreach (var statement in switchSection.Statements)
                 {
                     StatementSyntax statementToAlign = statement;
@@ -236,12 +249,14 @@ namespace StyleCop.Analyzers.ReadabilityRules
             CheckElements(context, labels.ToImmutable());
             CheckElements(context, statements.ToImmutable());
             CheckElements(context, labeledStatements.ToImmutable());
+            CheckBlocks(context, blockStatements.ToImmutable());
         }
 
         private static void HandleInitializerExpression(SyntaxNodeAnalysisContext context)
         {
             var initializerExpression = (InitializerExpressionSyntax)context.Node;
 
+            CheckBraces(context, initializerExpression.OpenBraceToken, initializerExpression.CloseBraceToken);
             CheckElements(context, initializerExpression.Expressions);
         }
 
@@ -249,7 +264,22 @@ namespace StyleCop.Analyzers.ReadabilityRules
         {
             var anonymousObjectCreationExpression = (AnonymousObjectCreationExpressionSyntax)context.Node;
 
+            CheckBraces(context, anonymousObjectCreationExpression.OpenBraceToken, anonymousObjectCreationExpression.CloseBraceToken);
             CheckElements(context, anonymousObjectCreationExpression.Initializers);
+        }
+
+        private static void HandleTupleType(SyntaxNodeAnalysisContext context)
+        {
+            var tupleType = (TupleTypeSyntaxWrapper)context.Node;
+
+            CheckElements(context, tupleType.Elements);
+        }
+
+        private static void HandleTupleExpression(SyntaxNodeAnalysisContext context)
+        {
+            var tupleExpression = (TupleExpressionSyntaxWrapper)context.Node;
+
+            CheckElements(context, tupleExpression.Arguments);
         }
 
         private static void AddMembersAndAttributes<T>(ImmutableList<SyntaxNode>.Builder elements, SeparatedSyntaxList<T> members)
@@ -345,6 +375,60 @@ namespace StyleCop.Analyzers.ReadabilityRules
             CheckElements(context, elements.ToImmutableList());
         }
 
+        private static void CheckElements<T>(SyntaxNodeAnalysisContext context, SeparatedSyntaxListWrapper<T> elements)
+        {
+            if (elements.Count < 2)
+            {
+                return;
+            }
+
+            CheckElements(context, ((IEnumerable<SyntaxNode>)elements.UnderlyingList).ToImmutableList());
+        }
+
+        // BlockSyntax is analyzed separately because it needs to check both braces.
+        private static void CheckBlocks(SyntaxNodeAnalysisContext context, ImmutableList<BlockSyntax> elements)
+        {
+            if (elements.Count < 2)
+            {
+                return;
+            }
+
+            elements = CleanupElementsList(elements);
+
+            if (elements.Count < 2)
+            {
+                return;
+            }
+
+            bool first = true;
+            string expectedIndentation = null;
+            foreach (BlockSyntax element in elements)
+            {
+                SyntaxTrivia openBraceIndentationTrivia = element.OpenBraceToken.LeadingTrivia.LastOrDefault();
+                string openBraceIndentation = openBraceIndentationTrivia.IsKind(SyntaxKind.WhitespaceTrivia) ? openBraceIndentationTrivia.ToString() : string.Empty;
+
+                SyntaxTrivia closeBraceIndentationTrivia = element.CloseBraceToken.LeadingTrivia.LastOrDefault();
+                string closeBraceIndentation = closeBraceIndentationTrivia.IsKind(SyntaxKind.WhitespaceTrivia) ? closeBraceIndentationTrivia.ToString() : string.Empty;
+
+                if (first)
+                {
+                    expectedIndentation = openBraceIndentation;
+                    first = false;
+                    continue;
+                }
+
+                if (!string.Equals(expectedIndentation, openBraceIndentation, StringComparison.Ordinal))
+                {
+                    ReportDiagnostic(context, element.OpenBraceToken, openBraceIndentationTrivia, openBraceIndentation, expectedIndentation);
+                }
+
+                if (!string.Equals(expectedIndentation, closeBraceIndentation, StringComparison.Ordinal))
+                {
+                    ReportDiagnostic(context, element.CloseBraceToken, closeBraceIndentationTrivia, closeBraceIndentation, expectedIndentation);
+                }
+            }
+        }
+
         private static void CheckElements<T>(SyntaxNodeAnalysisContext context, ImmutableList<T> elements)
             where T : SyntaxNode
         {
@@ -353,12 +437,7 @@ namespace StyleCop.Analyzers.ReadabilityRules
                 return;
             }
 
-            elements = elements.RemoveAll(
-                element =>
-                {
-                    SyntaxToken firstToken = GetFirstTokenForAnalysis(element);
-                    return firstToken.IsMissingOrDefault() || !firstToken.IsFirstInLine(allowNonWhitespaceTrivia: false);
-                });
+            elements = CleanupElementsList(elements);
 
             if (elements.Count < 2)
             {
@@ -389,25 +468,22 @@ namespace StyleCop.Analyzers.ReadabilityRules
                     continue;
                 }
 
-                if (string.Equals(expectedIndentation, indentation, StringComparison.Ordinal))
+                if (!string.Equals(expectedIndentation, indentation, StringComparison.Ordinal))
                 {
-                    // This handles the case where elements are indented properly
-                    continue;
+                    ReportDiagnostic(context, firstToken, indentationTrivia, indentation, expectedIndentation);
                 }
-
-                Location location;
-                if (indentation.Length == 0)
-                {
-                    location = firstToken.GetLocation();
-                }
-                else
-                {
-                    location = indentationTrivia.GetLocation();
-                }
-
-                ImmutableDictionary<string, string> properties = ImmutableDictionary.Create<string, string>().SetItem(ExpectedIndentationKey, expectedIndentation);
-                context.ReportDiagnostic(Diagnostic.Create(Descriptor, location, properties));
             }
+        }
+
+        private static ImmutableList<T> CleanupElementsList<T>(ImmutableList<T> elements)
+                        where T : SyntaxNode
+        {
+            return elements.RemoveAll(
+                element =>
+                {
+                    SyntaxToken firstToken = GetFirstTokenForAnalysis(element);
+                    return firstToken.IsMissingOrDefault() || !firstToken.IsFirstInLine(allowNonWhitespaceTrivia: false);
+                });
         }
 
         private static SyntaxToken GetFirstTokenForAnalysis(SyntaxNode node)
@@ -424,6 +500,39 @@ namespace StyleCop.Analyzers.ReadabilityRules
             }
 
             return firstToken;
+        }
+
+        private static void CheckBraces(SyntaxNodeAnalysisContext context, SyntaxToken openBraceToken, SyntaxToken closeBraceToken)
+        {
+            if (openBraceToken.GetLine() == closeBraceToken.GetLine())
+            {
+                // If the braces are on the same line, there is no point in checking indentation
+                return;
+            }
+
+            if (!openBraceToken.IsFirstInLine())
+            {
+                // Do not check brace indentation if the opening brace is not the first token on a line.
+                return;
+            }
+
+            SyntaxTrivia openBraceIndentationTrivia = openBraceToken.LeadingTrivia.LastOrDefault();
+            string openBraceIndentation = openBraceIndentationTrivia.IsKind(SyntaxKind.WhitespaceTrivia) ? openBraceIndentationTrivia.ToString() : string.Empty;
+
+            SyntaxTrivia closeBraceIndentationTrivia = closeBraceToken.LeadingTrivia.LastOrDefault();
+            string closeBraceIndentation = closeBraceIndentationTrivia.IsKind(SyntaxKind.WhitespaceTrivia) ? closeBraceIndentationTrivia.ToString() : string.Empty;
+
+            if (!string.Equals(openBraceIndentation, closeBraceIndentation, StringComparison.Ordinal))
+            {
+                ReportDiagnostic(context, closeBraceToken, closeBraceIndentationTrivia, closeBraceIndentation, openBraceIndentation);
+            }
+        }
+
+        private static void ReportDiagnostic(SyntaxNodeAnalysisContext context, SyntaxToken token, SyntaxTrivia tokenLeadingTrivia, string indentation, string expectedIndentation)
+        {
+            Location location = (indentation.Length == 0) ? token.GetLocation() : tokenLeadingTrivia.GetLocation();
+            ImmutableDictionary<string, string> properties = ImmutableDictionary.Create<string, string>().SetItem(ExpectedIndentationKey, expectedIndentation);
+            context.ReportDiagnostic(Diagnostic.Create(Descriptor, location, properties));
         }
     }
 }

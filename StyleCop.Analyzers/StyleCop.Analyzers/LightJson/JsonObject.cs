@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace LightJson
 {
@@ -14,7 +14,7 @@ namespace LightJson
     [DebuggerTypeProxy(typeof(JsonObjectDebugView))]
     internal sealed class JsonObject : IEnumerable<KeyValuePair<string, JsonValue>>, IEnumerable<JsonValue>
     {
-        private IDictionary<string, JsonValue> properties;
+        private readonly IDictionary<string, JsonValue> properties;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonObject"/> class.
@@ -41,7 +41,7 @@ namespace LightJson
         /// </summary>
         /// <param name="key">The key of the property to get or set.</param>
         /// <remarks>
-        /// The getter will return JsonValue.Null if the given key is not assosiated with any value.
+        /// <para>The getter will return JsonValue.Null if the given key is not assosiated with any value.</para>
         /// </remarks>
         public JsonValue this[string key]
         {
@@ -69,7 +69,7 @@ namespace LightJson
         /// Adds a key with a null value to this collection.
         /// </summary>
         /// <param name="key">The key of the property to be added.</param>
-        /// <remarks>Returns this JsonObject.</remarks>
+        /// <remarks><para>Returns this JsonObject.</para></remarks>
         /// <returns>The <see cref="JsonObject"/> that was added.</returns>
         public JsonObject Add(string key)
         {
@@ -114,8 +114,8 @@ namespace LightJson
         /// Changes the key of one of the items in the collection.
         /// </summary>
         /// <remarks>
-        /// This method has no effects if the <i>oldKey</i> does not exists.
-        /// If the <i>newKey</i> already exists, the value will be overwritten.
+        /// <para>This method has no effects if the <i>oldKey</i> does not exists.
+        /// If the <i>newKey</i> already exists, the value will be overwritten.</para>
         /// </remarks>
         /// <param name="oldKey">The name of the key to be changed.</param>
         /// <param name="newKey">The new name of the key.</param>
@@ -189,7 +189,7 @@ namespace LightJson
         [ExcludeFromCodeCoverage]
         private class JsonObjectDebugView
         {
-            private JsonObject jsonObject;
+            private readonly JsonObject jsonObject;
 
             public JsonObjectDebugView(JsonObject jsonObject)
             {
@@ -217,11 +217,13 @@ namespace LightJson
             [DebuggerDisplay("{value.ToString(),nq}", Name = "{key}", Type = "JsonValue({Type})")]
             public class KeyValuePair
             {
+#pragma warning disable IDE0052 // Remove unread private members
                 [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-                private string key;
+                private readonly string key;
+#pragma warning restore IDE0052 // Remove unread private members
 
                 [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-                private JsonValue value;
+                private readonly JsonValue value;
 
                 public KeyValuePair(string key, JsonValue value)
                 {
@@ -246,15 +248,6 @@ namespace LightJson
                         {
                             return this.value;
                         }
-                    }
-                }
-
-                [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-                private JsonValueType Type
-                {
-                    get
-                    {
-                        return this.value.Type;
                     }
                 }
             }

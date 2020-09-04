@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.Lightup
 {
@@ -67,7 +67,7 @@ namespace StyleCop.Analyzers.Test.Lightup
             Assert.ThrowsAny<InvalidOperationException>(() => LightupHelpers.CreateSeparatedSyntaxListPropertyAccessor<ParameterListSyntax, ParameterSyntax>(typeof(BaseParameterListSyntax), nameof(BaseParameterListSyntax.Parameters)));
         }
 
-        [Fact(Skip = "Validation is not currently performed for the second argument.")]
+        [Fact]
         public void TestCreateSeparatedSyntaxListPropertyAccessorValidateElementType()
         {
             // The call *should* have been made with the second generic argument set to `ParameterSyntax`
@@ -98,7 +98,7 @@ namespace StyleCop.Analyzers.Test.Lightup
             Assert.ThrowsAny<InvalidOperationException>(() => LightupHelpers.CreateSeparatedSyntaxListWithPropertyAccessor<ParameterListSyntax, ParameterSyntax>(typeof(BaseParameterListSyntax), nameof(BaseParameterListSyntax.Parameters)));
         }
 
-        [Fact(Skip = "Validation is not currently performed for the second argument.")]
+        [Fact]
         public void TestCreateSeparatedSyntaxListWithPropertyAccessorValidateElementType()
         {
             // The call *should* have been made with the second generic argument set to `ParameterSyntax`

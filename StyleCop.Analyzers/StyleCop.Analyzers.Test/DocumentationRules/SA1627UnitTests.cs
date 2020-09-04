@@ -1,22 +1,22 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.DocumentationRules
 {
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Analyzers.DocumentationRules;
-    using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.Diagnostics;
-    using StyleCop.Analyzers.Test.Helpers;
+    using Microsoft.CodeAnalysis.Testing;
+    using StyleCop.Analyzers.DocumentationRules;
+    using StyleCop.Analyzers.Test.Verifiers;
     using TestHelper;
     using Xunit;
+    using static StyleCop.Analyzers.Test.Verifiers.CustomDiagnosticVerifier<StyleCop.Analyzers.DocumentationRules.SA1627DocumentationTextMustNotBeEmpty>;
 
     /// <summary>
     /// This class contains unit tests for <see cref="SA1627DocumentationTextMustNotBeEmpty"/>.
     /// </summary>
-    public class SA1627UnitTests : DiagnosticVerifier
+    public class SA1627UnitTests
     {
         public static IEnumerable<object[]> Elements
         {
@@ -32,7 +32,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         /// <summary>
         /// Checks an element with a blank value gives an error.
         /// </summary>
-        /// <param name="element">Element to check</param>
+        /// <param name="element">Element to check.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Theory]
         [MemberData(nameof(Elements))]
@@ -52,8 +52,8 @@ public class ClassName
     /// <$$>  </$$>
     public string JoinStrings(string first, string second) { return first + second; }
 }";
-            var expectedDiagnostic = this.CSharpDiagnostic().WithLocation(12, 9).WithArguments(element);
-            await this.VerifyCSharpDiagnosticAsync(testCode.Replace("$$", element), expectedDiagnostic, CancellationToken.None).ConfigureAwait(false);
+            var expectedDiagnostic = Diagnostic().WithLocation(12, 9).WithArguments(element);
+            await VerifyCSharpDiagnosticAsync(testCode.Replace("$$", element), expectedDiagnostic, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -87,16 +87,16 @@ public class ClassName
 }";
             var expectedDiagnostics = new[]
             {
-                this.CSharpDiagnostic().WithLocation(13, 9).WithArguments("example"),
-                this.CSharpDiagnostic().WithLocation(14, 9).WithArguments("exception"),
+                Diagnostic().WithLocation(13, 9).WithArguments("example"),
+                Diagnostic().WithLocation(14, 9).WithArguments("exception"),
             };
-            await this.VerifyCSharpDiagnosticAsync(testCode, expectedDiagnostics, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, expectedDiagnostics, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Checks an element with an empty element gives an error.
         /// </summary>
-        /// <param name="element">Element to check</param>
+        /// <param name="element">Element to check.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Theory]
         [MemberData(nameof(Elements))]
@@ -116,14 +116,14 @@ public class ClassName
     /// <$$ />
     public string JoinStrings(string first, string second) { return first + second; }
 }";
-            var expectedDiagnostic = this.CSharpDiagnostic().WithLocation(12, 9).WithArguments(element);
-            await this.VerifyCSharpDiagnosticAsync(testCode.Replace("$$", element), expectedDiagnostic, CancellationToken.None).ConfigureAwait(false);
+            var expectedDiagnostic = Diagnostic().WithLocation(12, 9).WithArguments(element);
+            await VerifyCSharpDiagnosticAsync(testCode.Replace("$$", element), expectedDiagnostic, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Checks an element with non blank text does not give an error.
         /// </summary>
-        /// <param name="element">Element to check</param>
+        /// <param name="element">Element to check.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Theory]
         [MemberData(nameof(Elements))]
@@ -143,7 +143,7 @@ public class ClassName
     /// <$$>Not blank element.</$$>
     public string JoinStrings(string first, string second) { return first + second; }
 }";
-            await this.VerifyCSharpDiagnosticAsync(testCode.Replace("$$", element), EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode.Replace("$$", element), DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -167,7 +167,7 @@ public class ClassName
     /// <custom1/>
     public string JoinStrings(string first, string second) { return first + second; }
 }";
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ public class ClassName
 /// <include file='AllFilled.xml' path='/TestClass/TestMethod/*'/>
 ";
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -200,7 +200,7 @@ public class TestClass
 }
 ";
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -219,7 +219,7 @@ public class TestClass
 }
 ";
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -237,8 +237,8 @@ public class TestClass
     public void TestMethod(int first) { }
 }
 ";
-            var expected = this.CSharpDiagnostic().WithLocation(5, 9).WithArguments("permission");
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
+            var expected = Diagnostic().WithLocation(5, 9).WithArguments("permission");
+            await VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -259,18 +259,27 @@ public class TestClass
 
             DiagnosticResult[] expected =
             {
-                this.CSharpDiagnostic().WithLocation(5, 9).WithArguments("remarks"),
-                this.CSharpDiagnostic().WithLocation(5, 9).WithArguments("example"),
-                this.CSharpDiagnostic().WithLocation(5, 9).WithArguments("permission"),
-                this.CSharpDiagnostic().WithLocation(5, 9).WithArguments("exception"),
+                Diagnostic().WithLocation(5, 9).WithArguments("remarks"),
+                Diagnostic().WithLocation(5, 9).WithArguments("example"),
+                Diagnostic().WithLocation(5, 9).WithArguments("permission"),
+                Diagnostic().WithLocation(5, 9).WithArguments("exception"),
             };
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
         }
 
-        protected override Project ApplyCompilationOptions(Project project)
-        {
-            var resolver = new TestXmlReferenceResolver();
+        private static Task VerifyCSharpDiagnosticAsync(string source, DiagnosticResult expected, CancellationToken cancellationToken)
+            => VerifyCSharpDiagnosticAsync(source, new[] { expected }, cancellationToken);
 
+        private static Task VerifyCSharpDiagnosticAsync(string source, DiagnosticResult[] expected, CancellationToken cancellationToken)
+        {
+            var test = CreateTest(expected);
+            test.TestCode = source;
+
+            return test.RunAsync(cancellationToken);
+        }
+
+        private static StyleCopDiagnosticVerifier<SA1627DocumentationTextMustNotBeEmpty>.CSharpTest CreateTest(DiagnosticResult[] expected)
+        {
             string contentAllFilled = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <TestClass>
   <TestMethod>
@@ -283,8 +292,6 @@ public class TestClass
   </TestMethod>
 </TestClass>
 ";
-            resolver.XmlReferences.Add("AllFilled.xml", contentAllFilled);
-
             string contentInheritDoc = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <TestClass>
   <TestMethod>
@@ -292,8 +299,6 @@ public class TestClass
   </TestMethod>
 </TestClass>
 ";
-            resolver.XmlReferences.Add("InheritDoc.xml", contentInheritDoc);
-
             string contentAllButOneFilled = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <TestClass>
   <TestMethod>
@@ -306,8 +311,6 @@ public class TestClass
   </TestMethod>
 </TestClass>
 ";
-            resolver.XmlReferences.Add("AllButOneFilled.xml", contentAllButOneFilled);
-
             string contentNoneFilled = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <TestClass>
   <TestMethod>
@@ -320,16 +323,20 @@ public class TestClass
   </TestMethod>
 </TestClass>
 ";
-            resolver.XmlReferences.Add("NoneFilled.xml", contentNoneFilled);
 
-            project = base.ApplyCompilationOptions(project);
-            project = project.WithCompilationOptions(project.CompilationOptions.WithXmlReferenceResolver(resolver));
-            return project;
-        }
+            var test = new StyleCopDiagnosticVerifier<SA1627DocumentationTextMustNotBeEmpty>.CSharpTest
+            {
+                XmlReferences =
+                {
+                    { "AllFilled.xml", contentAllFilled },
+                    { "InheritDoc.xml", contentInheritDoc },
+                    { "AllButOneFilled.xml", contentAllButOneFilled },
+                    { "NoneFilled.xml", contentNoneFilled },
+                },
+            };
 
-        protected override IEnumerable<DiagnosticAnalyzer> GetCSharpDiagnosticAnalyzers()
-        {
-            yield return new SA1627DocumentationTextMustNotBeEmpty();
+            test.ExpectedDiagnostics.AddRange(expected);
+            return test;
         }
     }
 }

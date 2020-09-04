@@ -1,15 +1,15 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.OrderingRules
 {
     using System;
     using System.Collections.Immutable;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Diagnostics;
+    using StyleCop.Analyzers.Helpers;
     using static ModifierOrderHelper;
 
     /// <summary>
@@ -22,9 +22,9 @@ namespace StyleCop.Analyzers.OrderingRules
     /// <para>Within an element declaration, keywords should appear in the following order:</para>
     ///
     /// <list type="bullet">
-    /// <item>Access modifiers</item>
-    /// <item><see langword="static"/></item>
-    /// <item>All other keywords</item>
+    /// <item><description>Access modifiers</description></item>
+    /// <item><description><see langword="static"/></description></item>
+    /// <item><description>All other keywords</description></item>
     /// </list>
     ///
     /// <para>Using a standard ordering scheme for element declaration keywords can make the code more readable by
@@ -38,10 +38,10 @@ namespace StyleCop.Analyzers.OrderingRules
         /// The ID for diagnostics produced by the <see cref="SA1206DeclarationKeywordsMustFollowOrder"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1206";
-        private const string Title = "Declaration keywords should follow order";
-        private const string MessageFormat = "The '{0}' modifier should appear before '{1}'";
-        private const string Description = "The keywords within the declaration of an element do not follow a standard ordering scheme.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1206.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(OrderingResources.SA1206Title), OrderingResources.ResourceManager, typeof(OrderingResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(OrderingResources.SA1206MessageFormat), OrderingResources.ResourceManager, typeof(OrderingResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(OrderingResources.SA1206Description), OrderingResources.ResourceManager, typeof(OrderingResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.OrderingRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -88,8 +88,8 @@ namespace StyleCop.Analyzers.OrderingRules
         {
             var previousModifierType = ModifierType.None;
             var otherModifiersAppearEarlier = false;
-            SyntaxToken previousModifier = default(SyntaxToken);
-            SyntaxToken previousOtherModifier = default(SyntaxToken);
+            SyntaxToken previousModifier = default;
+            SyntaxToken previousOtherModifier = default;
 
             foreach (var modifier in modifiers)
             {
@@ -150,28 +150,6 @@ namespace StyleCop.Analyzers.OrderingRules
             else if (first == ModifierType.Other && (second == ModifierType.Static || second == ModifierType.Access))
             {
                 result = greaterThan;
-            }
-
-            return result;
-        }
-
-        private static string GetModifierTypeText(ModifierType modifierType)
-        {
-            var result = string.Empty;
-
-            switch (modifierType)
-            {
-            case ModifierType.Access:
-                result = "access modifier";
-                break;
-
-            case ModifierType.Static:
-                result = "static";
-                break;
-
-            case ModifierType.Other:
-                result = "other";
-                break;
             }
 
             return result;

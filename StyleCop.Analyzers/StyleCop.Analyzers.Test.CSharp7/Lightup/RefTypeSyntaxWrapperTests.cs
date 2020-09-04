@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.CSharp7.Lightup
 {
@@ -19,9 +19,11 @@ namespace StyleCop.Analyzers.Test.CSharp7.Lightup
             var wrapper = (RefTypeSyntaxWrapper)syntaxNode;
             Assert.Null(wrapper.SyntaxNode);
             Assert.Throws<NullReferenceException>(() => wrapper.RefKeyword);
+            Assert.Throws<NullReferenceException>(() => wrapper.ReadOnlyKeyword);
             Assert.Throws<NullReferenceException>(() => wrapper.Type);
             Assert.Throws<NullReferenceException>(() => wrapper.WithType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword))));
             Assert.Throws<NullReferenceException>(() => wrapper.WithRefKeyword(SyntaxFactory.Token(SyntaxKind.RefKeyword)));
+            Assert.Throws<NullReferenceException>(() => wrapper.WithReadOnlyKeyword(SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword)));
         }
 
         [Fact]
@@ -35,6 +37,7 @@ namespace StyleCop.Analyzers.Test.CSharp7.Lightup
             Assert.Same(syntaxNode, wrapper.SyntaxNode);
             Assert.Same(syntaxNode.Type, wrapper.Type);
             Assert.True(syntaxNode.RefKeyword.IsEquivalentTo(wrapper.RefKeyword));
+            Assert.Equal(default, syntaxNode.ReadOnlyKeyword);
 
             var newType = SyntaxFactory.PointerType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword)));
             var wrapperWithModifiedType = wrapper.WithType(newType);
@@ -45,8 +48,15 @@ namespace StyleCop.Analyzers.Test.CSharp7.Lightup
             var newRefKeyword = SyntaxFactory.Token(SyntaxKind.RefKeyword).WithLeadingTrivia(SyntaxFactory.Space);
             var wrapperWithModifiedRefKeyword = wrapper.WithRefKeyword(newRefKeyword);
             Assert.NotNull(wrapperWithModifiedRefKeyword.SyntaxNode);
-            Assert.Equal(1, wrapperWithModifiedRefKeyword.RefKeyword.LeadingTrivia.Count);
+            Assert.Single(wrapperWithModifiedRefKeyword.RefKeyword.LeadingTrivia);
             Assert.Equal(" ", wrapperWithModifiedRefKeyword.RefKeyword.LeadingTrivia.ToString());
+
+            var readOnlyKeyword = SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword).WithLeadingTrivia(SyntaxFactory.Space);
+            var wrapperWithReadOnlyKeyword = wrapper.WithReadOnlyKeyword(readOnlyKeyword);
+            Assert.NotNull(wrapperWithReadOnlyKeyword.SyntaxNode);
+            Assert.Single(wrapperWithReadOnlyKeyword.ReadOnlyKeyword.LeadingTrivia);
+            Assert.Equal(" ", wrapperWithReadOnlyKeyword.ReadOnlyKeyword.LeadingTrivia.ToString());
+            Assert.True(wrapperWithReadOnlyKeyword.ReadOnlyKeyword.IsEquivalentTo(readOnlyKeyword));
         }
 
         [Fact]

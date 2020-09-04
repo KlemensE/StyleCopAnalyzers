@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.MaintainabilityRules
 {
@@ -10,6 +10,7 @@ namespace StyleCop.Analyzers.MaintainabilityRules
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Diagnostics;
+    using StyleCop.Analyzers.Helpers;
     using StyleCop.Analyzers.Lightup;
 
     /// <summary>
@@ -54,16 +55,18 @@ namespace StyleCop.Analyzers.MaintainabilityRules
         /// <see cref="WellKnownDiagnosticTags.Unnecessary"/>.
         /// </summary>
         public const string ParenthesesDiagnosticId = DiagnosticId + "_p";
-        private const string Title = "Statement should not use unnecessary parenthesis";
-        private const string MessageFormat = "Statement should not use unnecessary parenthesis";
-        private const string Description = "A C# statement contains parenthesis which are unnecessary and should be removed.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1119.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(MaintainabilityResources.SA1119Title), MaintainabilityResources.ResourceManager, typeof(MaintainabilityResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(MaintainabilityResources.SA1119MessageFormat), MaintainabilityResources.ResourceManager, typeof(MaintainabilityResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(MaintainabilityResources.SA1119Description), MaintainabilityResources.ResourceManager, typeof(MaintainabilityResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.MaintainabilityRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
 
         private static readonly DiagnosticDescriptor ParenthesisDescriptor =
+#pragma warning disable RS2000 // Add analyzer diagnostic IDs to analyzer release.
             new DiagnosticDescriptor(ParenthesesDiagnosticId, Title, MessageFormat, AnalyzerCategory.MaintainabilityRules, DiagnosticSeverity.Hidden, AnalyzerConstants.EnabledByDefault, Description, HelpLink, customTags: new[] { WellKnownDiagnosticTags.Unnecessary, WellKnownDiagnosticTags.NotConfigurable });
+#pragma warning restore RS2000 // Add analyzer diagnostic IDs to analyzer release.
 
         private static readonly Action<CompilationStartAnalysisContext> CompilationStartAction = HandleCompilationStart;
         private static readonly Action<SyntaxNodeAnalysisContext> ParenthesizedExpressionAction = HandleParenthesizedExpression;
@@ -88,7 +91,7 @@ namespace StyleCop.Analyzers.MaintainabilityRules
             // Only register the syntax node action if the diagnostic is enabled. This is important because
             // otherwise the diagnostic for fading out the parenthesis is still active, even if the main diagnostic
             // is disabled
-            if (context.Compilation.Options.SpecificDiagnosticOptions.GetValueOrDefault(Descriptor.Id) != Microsoft.CodeAnalysis.ReportDiagnostic.Suppress)
+            if (!context.IsAnalyzerSuppressed(Descriptor))
             {
                 context.RegisterSyntaxNodeAction(ParenthesizedExpressionAction, SyntaxKind.ParenthesizedExpression);
             }
@@ -96,9 +99,9 @@ namespace StyleCop.Analyzers.MaintainabilityRules
 
         private static void HandleParenthesizedExpression(SyntaxNodeAnalysisContext context)
         {
-            var node = context.Node as ParenthesizedExpressionSyntax;
+            var node = (ParenthesizedExpressionSyntax)context.Node;
 
-            if (node != null && node.Expression != null)
+            if (node.Expression != null)
             {
                 if (!(node.Expression is BinaryExpressionSyntax)
                     && !(node.Expression is AssignmentExpressionSyntax)
@@ -124,6 +127,11 @@ namespace StyleCop.Analyzers.MaintainabilityRules
                         return;
                     }
 
+                    if (IsSwitchExpressionPrecededByTypeCast(node))
+                    {
+                        return;
+                    }
+
                     ReportDiagnostic(context, node);
                 }
                 else
@@ -139,8 +147,7 @@ namespace StyleCop.Analyzers.MaintainabilityRules
                         || node.Parent is CheckedExpressionSyntax
                         || node.Parent is MemberAccessExpressionSyntax)
                     {
-                        var memberAccess = node.Parent as MemberAccessExpressionSyntax;
-                        if (memberAccess != null)
+                        if (node.Parent is MemberAccessExpressionSyntax memberAccess)
                         {
                             if (memberAccess.Expression != node)
                             {
@@ -154,15 +161,14 @@ namespace StyleCop.Analyzers.MaintainabilityRules
                     }
                     else
                     {
-                        EqualsValueClauseSyntax equalsValue = node.Parent as EqualsValueClauseSyntax;
-                        if (equalsValue != null && equalsValue.Value == node)
+                        if (node.Parent is EqualsValueClauseSyntax equalsValue
+                            && equalsValue.Value == node)
                         {
                             ReportDiagnostic(context, node);
                         }
                         else
                         {
-                            AssignmentExpressionSyntax assignValue = node.Parent as AssignmentExpressionSyntax;
-                            if (assignValue != null)
+                            if (node.Parent is AssignmentExpressionSyntax)
                             {
                                 ReportDiagnostic(context, node);
                             }
@@ -196,6 +202,23 @@ namespace StyleCop.Analyzers.MaintainabilityRules
             }
 
             return false;
+        }
+
+        private static bool IsSwitchExpressionPrecededByTypeCast(ParenthesizedExpressionSyntax node)
+        {
+            if (!node.Expression.IsKind(SyntaxKindEx.SwitchExpression))
+            {
+                return false;
+            }
+
+            var previousToken = node.OpenParenToken.GetPreviousToken();
+
+            while (previousToken.IsKind(SyntaxKind.OpenParenToken) && previousToken.Parent.IsKind(SyntaxKind.ParenthesizedExpression))
+            {
+                previousToken = previousToken.GetPreviousToken();
+            }
+
+            return previousToken.IsKind(SyntaxKind.CloseParenToken) && previousToken.Parent.IsKind(SyntaxKind.CastExpression);
         }
 
         private static void ReportDiagnostic(SyntaxNodeAnalysisContext context, ParenthesizedExpressionSyntax node)

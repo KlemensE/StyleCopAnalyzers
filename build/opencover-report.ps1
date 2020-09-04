@@ -1,17 +1,23 @@
 param (
-	[switch]$Debug
+	[switch]$Debug,
+	[switch]$NoBuild,
+	[switch]$NoReport,
+	[switch]$AppVeyor,
+	[switch]$Azure
 )
 
-# Run a build to ensure everything is up-to-date
-If ($Debug) {
-	.\build.ps1 -Debug -Incremental
-} Else {
-	.\build.ps1 -Incremental
-}
+If (-not $NoBuild) {
+	# Run a build to ensure everything is up-to-date
+	If ($Debug) {
+		.\build.ps1 -Debug -Incremental
+	} Else {
+		.\build.ps1 -Incremental
+	}
 
-If (-not $?) {
-	$host.UI.WriteErrorLine('Build failed; coverage analysis aborted.')
-	Exit $LASTEXITCODE
+	If (-not $?) {
+		$host.UI.WriteErrorLine('Build failed; coverage analysis aborted.')
+		Exit $LASTEXITCODE
+	}
 }
 
 If ($Debug) {
@@ -27,10 +33,14 @@ $xunitrunner_version = $packageConfig.SelectSingleNode('/packages/package[@id="x
 
 $packages_folder = '..\packages'
 $opencover_console = "$packages_folder\OpenCover.$opencover_version\tools\OpenCover.Console.exe"
-$xunit_runner_console = "$packages_folder\xunit.runner.console.$xunitrunner_version\tools\xunit.console.x86.exe"
+$xunit_runner_console_net452 = "$packages_folder\xunit.runner.console.$xunitrunner_version\tools\net452\xunit.console.x86.exe"
+$xunit_runner_console_net46 = "$packages_folder\xunit.runner.console.$xunitrunner_version\tools\net46\xunit.console.x86.exe"
+$xunit_runner_console_net472 = "$packages_folder\xunit.runner.console.$xunitrunner_version\tools\net472\xunit.console.x86.exe"
 $report_generator = "$packages_folder\ReportGenerator.$reportgenerator_version\tools\ReportGenerator.exe"
 $report_folder = '.\OpenCover.Reports'
-$target_dll = "..\StyleCop.Analyzers\StyleCop.Analyzers.Test\bin\$Configuration\StyleCop.Analyzers.Test.dll"
+$target_dll = "..\StyleCop.Analyzers\StyleCop.Analyzers.Test\bin\$Configuration\net452\StyleCop.Analyzers.Test.dll"
+$target_dll_csharp7 = "..\StyleCop.Analyzers\StyleCop.Analyzers.Test.CSharp7\bin\$Configuration\net46\StyleCop.Analyzers.Test.CSharp7.dll"
+$target_dll_csharp8 = "..\StyleCop.Analyzers\StyleCop.Analyzers.Test.CSharp8\bin\$Configuration\net472\StyleCop.Analyzers.Test.CSharp8.dll"
 
 If (Test-Path $report_folder) {
 	Remove-Item -Recurse -Force $report_folder
@@ -38,18 +48,72 @@ If (Test-Path $report_folder) {
 
 mkdir $report_folder | Out-Null
 
+$register_mode = 'user'
+If ($AppVeyor) {
+	$AppVeyorArg = '-appveyor'
+	$register_mode = 'Path32'
+} ElseIf ($Azure) {
+	$register_mode = 'Path32'
+}
+
+$exitCode = 0
+
 &$opencover_console `
-	-register:user `
-	-threshold:1 `
+	-register:$register_mode `
+	-threshold:1 -oldStyle `
 	-returntargetcode `
 	-hideskipped:All `
 	-filter:"+[StyleCop*]*" `
 	-excludebyattribute:*.ExcludeFromCodeCoverage* `
 	-excludebyfile:*\*Designer.cs `
 	-output:"$report_folder\OpenCover.StyleCopAnalyzers.xml" `
-	-target:"$xunit_runner_console" `
-	-targetargs:"$target_dll -noshadow"
+	-target:"$xunit_runner_console_net452" `
+	-targetargs:"$target_dll -noshadow $AppVeyorArg -xml StyleCopAnalyzers.xunit.xml"
 
-&$report_generator -targetdir:$report_folder -reports:$report_folder\OpenCover.*.xml
+If (($AppVeyor -or $Azure) -and -not $?) {
+	$host.UI.WriteErrorLine('Build failed; coverage analysis may be incomplete.')
+	$exitCode = $LASTEXITCODE
+}
 
-$host.UI.WriteLine("Open $report_folder\index.htm to see code coverage results.")
+&$opencover_console `
+	-register:$register_mode `
+	-threshold:1 -oldStyle `
+	-returntargetcode `
+	-hideskipped:All `
+	-filter:"+[StyleCop*]*" `
+	-excludebyattribute:*.ExcludeFromCodeCoverage* `
+	-excludebyfile:*\*Designer.cs `
+	-output:"$report_folder\OpenCover.StyleCopAnalyzers.xml" `
+	-mergebyhash -mergeoutput `
+	-target:"$xunit_runner_console_net46" `
+	-targetargs:"$target_dll_csharp7 -noshadow $AppVeyorArg -xml StyleCopAnalyzers.CSharp7.xunit.xml"
+
+If (($AppVeyor -or $Azure) -and -not $?) {
+	$host.UI.WriteErrorLine('Build failed; coverage analysis may be incomplete.')
+	$exitCode = $LASTEXITCODE
+}
+
+&$opencover_console `
+	-register:$register_mode `
+	-threshold:1 -oldStyle `
+	-returntargetcode `
+	-hideskipped:All `
+	-filter:"+[StyleCop*]*" `
+	-excludebyattribute:*.ExcludeFromCodeCoverage* `
+	-excludebyfile:*\*Designer.cs `
+	-output:"$report_folder\OpenCover.StyleCopAnalyzers.xml" `
+	-mergebyhash -mergeoutput `
+	-target:"$xunit_runner_console_net472" `
+	-targetargs:"$target_dll_csharp8 -noshadow $AppVeyorArg -xml StyleCopAnalyzers.CSharp8.xunit.xml"
+
+If (($AppVeyor -or $Azure) -and -not $?) {
+	$host.UI.WriteErrorLine('Build failed; coverage analysis may be incomplete.')
+	$exitCode = $LASTEXITCODE
+}
+
+If (-not $NoReport) {
+	&$report_generator -targetdir:$report_folder -reports:$report_folder\OpenCover.*.xml
+	$host.UI.WriteLine("Open $report_folder\index.htm to see code coverage results.")
+}
+
+Exit $exitCode

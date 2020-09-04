@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.SpacingRules
 {
@@ -16,8 +16,9 @@ namespace StyleCop.Analyzers.SpacingRules
     /// <remarks>
     /// <para>A violation of this rule occurs when the spacing around a comma is incorrect.</para>
     ///
-    /// <para>A comma should always be followed by a single space, unless it is the last character on the line, and a
-    /// comma should never be preceded by any whitespace, unless it is the first character on the line.</para>
+    /// <para>A comma should always be followed by a single space, unless it is the last character on the line or it is
+    /// part of a string interpolation alignment component, and a comma should never be preceded by any whitespace,
+    /// unless it is the first character on the line.</para>
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     internal class SA1001CommasMustBeSpacedCorrectly : DiagnosticAnalyzer
@@ -26,10 +27,10 @@ namespace StyleCop.Analyzers.SpacingRules
         /// The ID for diagnostics produced by the <see cref="SA1001CommasMustBeSpacedCorrectly"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1001";
-        private const string Title = "Commas should be spaced correctly";
-        private const string MessageFormat = "Commas should{0} be {1} by whitespace.";
-        private const string Description = "The spacing around a comma is incorrect, within a C# code file.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1001.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(SpacingResources.SA1001Title), SpacingResources.ResourceManager, typeof(SpacingResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(SpacingResources.SA1001MessageFormat), SpacingResources.ResourceManager, typeof(SpacingResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(SpacingResources.SA1001Description), SpacingResources.ResourceManager, typeof(SpacingResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.SpacingRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -75,6 +76,9 @@ namespace StyleCop.Analyzers.SpacingRules
 
             // check for a following space
             bool missingFollowingSpace = true;
+
+            // check for things like $"{x,5}"
+            var shouldNotHaveFollowingSpace = token.Parent.IsKind(SyntaxKind.InterpolationAlignmentClause);
             if (token.HasTrailingTrivia)
             {
                 if (token.TrailingTrivia.First().IsKind(SyntaxKind.WhitespaceTrivia))
@@ -102,10 +106,16 @@ namespace StyleCop.Analyzers.SpacingRules
                 context.ReportDiagnostic(Diagnostic.Create(Descriptor, token.GetLocation(), TokenSpacingProperties.RemovePrecedingPreserveLayout, " not", "preceded"));
             }
 
-            if (missingFollowingSpace)
+            if (missingFollowingSpace && !shouldNotHaveFollowingSpace)
             {
                 // comma should{} be {followed} by whitespace
                 context.ReportDiagnostic(Diagnostic.Create(Descriptor, token.GetLocation(), TokenSpacingProperties.InsertFollowing, string.Empty, "followed"));
+            }
+
+            if (!missingFollowingSpace && shouldNotHaveFollowingSpace)
+            {
+                // comma should{ not} be {followed} by whitespace
+                context.ReportDiagnostic(Diagnostic.Create(Descriptor, token.GetLocation(), TokenSpacingProperties.RemoveFollowing, " not", "followed"));
             }
         }
     }

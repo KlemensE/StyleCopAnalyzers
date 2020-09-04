@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.ReadabilityRules
 {
@@ -8,12 +8,12 @@ namespace StyleCop.Analyzers.ReadabilityRules
     using System.Composition;
     using System.Threading;
     using System.Threading.Tasks;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using StyleCop.Analyzers.Helpers;
 
     /// <summary>
     /// Implements a code fix for <see cref="SA1134AttributesMustNotShareLine"/>.
@@ -33,19 +33,23 @@ namespace StyleCop.Analyzers.ReadabilityRules
         }
 
         /// <inheritdoc/>
-        public override Task RegisterCodeFixesAsync(CodeFixContext context)
+        public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
+            var syntaxRoot = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+
             foreach (var diagnostic in context.Diagnostics)
             {
-                context.RegisterCodeFix(
-                    CodeAction.Create(
-                        ReadabilityResources.SA1134CodeFix,
-                        cancellationToken => GetTransformedDocumentAsync(context.Document, diagnostic, cancellationToken),
-                        nameof(SA1134CodeFixProvider)),
-                    diagnostic);
+                // Do not offer the code fix if the error is found at an invalid node (like IncompleteMemberSyntax)
+                if (syntaxRoot.FindNode(diagnostic.Location.SourceSpan) is AttributeListSyntax)
+                {
+                    context.RegisterCodeFix(
+                        CodeAction.Create(
+                            ReadabilityResources.SA1134CodeFix,
+                            cancellationToken => GetTransformedDocumentAsync(context.Document, diagnostic, cancellationToken),
+                            nameof(SA1134CodeFixProvider)),
+                        diagnostic);
+                }
             }
-
-            return SpecializedTasks.CompletedTask;
         }
 
         private static async Task<Document> GetTransformedDocumentAsync(Document document, Diagnostic diagnostic, CancellationToken cancellationToken)

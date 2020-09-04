@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.NamingRules
 {
@@ -10,9 +10,9 @@ namespace StyleCop.Analyzers.NamingRules
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Diagnostics;
-    using Settings.ObjectModel;
     using StyleCop.Analyzers.Helpers;
     using StyleCop.Analyzers.Lightup;
+    using StyleCop.Analyzers.Settings.ObjectModel;
 
     /// <summary>
     /// The name of a field or variable in C# uses Hungarian notation.
@@ -54,10 +54,10 @@ namespace StyleCop.Analyzers.NamingRules
         /// The ID for diagnostics produced by the <see cref="SA1305FieldNamesMustNotUseHungarianNotation"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1305";
-        private const string Title = "Field names should not use Hungarian notation";
-        private const string MessageFormat = "{0} '{1}' should not use Hungarian notation";
-        private const string Description = "The name of a field or variable in C# uses Hungarian notation.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1305.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(NamingResources.SA1305Title), NamingResources.ResourceManager, typeof(NamingResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(NamingResources.SA1305MessageFormat), NamingResources.ResourceManager, typeof(NamingResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(NamingResources.SA1305Description), NamingResources.ResourceManager, typeof(NamingResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.NamingRules, DiagnosticSeverity.Warning, AnalyzerConstants.DisabledByDefault, Description, HelpLink);
@@ -139,8 +139,7 @@ namespace StyleCop.Analyzers.NamingRules
                 }
 
                 // Only parameters from method declarations can be exempt from this rule
-                var memberDeclaration = parameter?.Parent?.Parent as MemberDeclarationSyntax;
-                if (memberDeclaration != null)
+                if (parameter?.Parent?.Parent is MemberDeclarationSyntax memberDeclaration)
                 {
                     var semanticModel = context.SemanticModel;
                     var symbol = semanticModel.GetDeclaredSymbol(memberDeclaration);

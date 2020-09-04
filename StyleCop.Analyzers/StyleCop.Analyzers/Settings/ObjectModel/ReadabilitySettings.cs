@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Settings.ObjectModel
 {
@@ -8,10 +8,16 @@ namespace StyleCop.Analyzers.Settings.ObjectModel
     internal class ReadabilitySettings
     {
         /// <summary>
+        /// This is the backing field for the <see cref="AllowBuiltInTypeAliases"/> property.
+        /// </summary>
+        private readonly bool allowBuiltInTypeAliases;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ReadabilitySettings"/> class.
         /// </summary>
         protected internal ReadabilitySettings()
         {
+            this.allowBuiltInTypeAliases = false;
         }
 
         /// <summary>
@@ -21,6 +27,21 @@ namespace StyleCop.Analyzers.Settings.ObjectModel
         protected internal ReadabilitySettings(JsonObject readabilitySettingsObject)
             : this()
         {
+            foreach (var kvp in readabilitySettingsObject)
+            {
+                switch (kvp.Key)
+                {
+                case "allowBuiltInTypeAliases":
+                    this.allowBuiltInTypeAliases = kvp.ToBooleanValue();
+                    break;
+
+                default:
+                    break;
+                }
+            }
         }
+
+        public bool AllowBuiltInTypeAliases =>
+            this.allowBuiltInTypeAliases;
     }
 }

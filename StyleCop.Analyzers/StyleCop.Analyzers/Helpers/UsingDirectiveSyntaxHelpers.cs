@@ -1,10 +1,11 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Helpers
 {
     using System;
     using System.Linq;
+    using System.Threading;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -84,15 +85,27 @@ namespace StyleCop.Analyzers.Helpers
             return UsingGroup.Regular;
         }
 
+        /// <summary>
+        /// Checks if the Name part of the given using directive starts with an alias.
+        /// </summary>
+        /// <param name="usingDirective">The <see cref="UsingDirectiveSyntax"/> that will be used.</param>
+        /// <param name="semanticModel">The <see cref="SemanticModel"/> that will be used.</param>
+        /// <param name="cancellationToken">The cancellation token that can be used to interrupt the operation.</param>
+        /// <returns>True if the name part of the using directive starts with an alias.</returns>
+        internal static bool StartsWithAlias(this UsingDirectiveSyntax usingDirective, SemanticModel semanticModel, CancellationToken cancellationToken)
+        {
+            var firstPart = usingDirective.Name.DescendantNodes().FirstOrDefault() ?? usingDirective.Name;
+            return semanticModel.GetAliasInfo(firstPart, cancellationToken) != null;
+        }
+
         private static bool ExcludeGlobalKeyword(IdentifierNameSyntax token) => !token.Identifier.IsKind(SyntaxKind.GlobalKeyword);
 
         private static SyntaxToken? GetFirstIdentifierInUsingDirective(UsingDirectiveSyntax usingDirective)
         {
             foreach (var identifier in usingDirective.DescendantNodes())
             {
-                IdentifierNameSyntax identifierName = identifier as IdentifierNameSyntax;
-
-                if (identifierName != null && ExcludeGlobalKeyword(identifierName))
+                if (identifier is IdentifierNameSyntax identifierName
+                    && ExcludeGlobalKeyword(identifierName))
                 {
                     return identifierName.Identifier;
                 }

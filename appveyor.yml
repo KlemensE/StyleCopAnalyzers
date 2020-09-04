@@ -1,19 +1,25 @@
-version: 1.0.{build}
-image: Visual Studio 2017
+version: '{build}'
+image: Visual Studio 2019
 init:
 - git config --global core.autocrlf true
+configuration:
+- Debug
+- Release
 before_build:
+- ps: .\init.ps1 -NoRestore
 - nuget restore
+skip_tags: true
 build:
   project: StyleCopAnalyzers.sln
   verbosity: minimal
 test_script:
-- .\packages\OpenCover.4.6.247-rc\tools\OpenCover.Console.exe -register:user -target:"%xunit20%\xunit.console.x86.exe" -targetargs:"C:\projects\stylecopanalyzers\StyleCop.Analyzers\StyleCop.Analyzers.Test\bin\Debug\net452\StyleCop.Analyzers.Test.dll -noshadow -appveyor" -returntargetcode -filter:"+[StyleCop*]*" -excludebyattribute:*.ExcludeFromCodeCoverage* -excludebyfile:*\*Designer.cs -hideskipped:All -output:.\StyleCopAnalyzers_coverage.xml
-- .\packages\OpenCover.4.6.247-rc\tools\OpenCover.Console.exe -register:user -target:"%xunit20%\xunit.console.x86.exe" -targetargs:"C:\projects\stylecopanalyzers\StyleCop.Analyzers\StyleCop.Analyzers.Test.CSharp7\bin\Debug\net46\StyleCop.Analyzers.Test.CSharp7.dll -noshadow -appveyor" -returntargetcode -filter:"+[StyleCop*]*" -excludebyattribute:*.ExcludeFromCodeCoverage* -excludebyfile:*\*Designer.cs -hideskipped:All -mergebyhash -mergeoutput -output:.\StyleCopAnalyzers_coverage.xml
-- .\packages\Codecov.1.0.1\tools\codecov.exe -f "StyleCopAnalyzers_coverage.xml"
-# preserve "packages" directory in the root of build folder but will reset it if packages.config is modified
+- .\StyleCop.Analyzers\StyleCop.Analyzers.Status.Generator\bin\%Configuration%\net472\StyleCop.Analyzers.Status.Generator.exe .\StyleCopAnalyzers.sln > StyleCop.Analyzers.Status.json
 cache:
   - packages -> **\packages.config
+  - C:\Users\appveyor\.nuget\packages -> appveyor.yml
+
+# 'Release' is hard-coded to ensure VSIX and NuGet artifacts are only published for release configuration builds
 artifacts:
-- path: 'StyleCop.Analyzers\**\*.vsix'
-- path: 'StyleCop.Analyzers\**\*.nupkg'
+- path: 'StyleCop.Analyzers\StyleCop.Analyzers.Vsix\bin\Release\net452\*.vsix'
+- path: 'StyleCop.Analyzers\StyleCop.Analyzers.CodeFixes\bin\Release\*.nupkg'
+- path: 'StyleCop.Analyzers.Status.json'

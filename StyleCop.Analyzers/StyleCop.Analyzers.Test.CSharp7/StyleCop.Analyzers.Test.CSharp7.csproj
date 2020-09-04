@@ -3,6 +3,8 @@
 
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -15,9 +17,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="2.1.0" />
-    <PackageReference Include="xunit" Version="2.3.0-beta3-build3705" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.0-beta3-build3705" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="2.8.2" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,7 +29,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="app.config" />
+    <None Update="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

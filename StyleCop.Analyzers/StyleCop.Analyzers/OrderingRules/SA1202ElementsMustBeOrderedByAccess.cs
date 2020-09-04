@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.OrderingRules
 {
@@ -24,11 +24,11 @@ namespace StyleCop.Analyzers.OrderingRules
     /// access level:</para>
     ///
     /// <list type="bullet">
-    /// <item>public</item>
-    /// <item>internal</item>
-    /// <item>protected internal</item>
-    /// <item>protected</item>
-    /// <item>private</item>
+    /// <item><description>public</description></item>
+    /// <item><description>internal</description></item>
+    /// <item><description>protected internal</description></item>
+    /// <item><description>protected</description></item>
+    /// <item><description>private</description></item>
     /// </list>
     ///
     /// <para>Complying with a standard ordering scheme based on access level can increase the readability and
@@ -42,10 +42,10 @@ namespace StyleCop.Analyzers.OrderingRules
         /// The ID for diagnostics produced by the <see cref="SA1202ElementsMustBeOrderedByAccess"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1202";
+        private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1202.md";
         private static readonly LocalizableString Title = new LocalizableResourceString(nameof(OrderingResources.SA1202Title), OrderingResources.ResourceManager, typeof(OrderingResources));
         private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(OrderingResources.SA1202MessageFormat), OrderingResources.ResourceManager, typeof(OrderingResources));
         private static readonly LocalizableString Description = new LocalizableResourceString(nameof(OrderingResources.SA1202Description), OrderingResources.ResourceManager, typeof(OrderingResources));
-        private static readonly string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1202.md";
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.OrderingRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -98,7 +98,7 @@ namespace StyleCop.Analyzers.OrderingRules
 
             var compilationUnit = (CompilationUnitSyntax)context.Node;
 
-            HandleMemberList(context, elementOrder, accessibilityIndex, compilationUnit.Members, AccessLevel.Internal);
+            HandleMemberList(context, elementOrder, accessibilityIndex, compilationUnit.Members);
         }
 
         private static void HandleNamespaceDeclaration(SyntaxNodeAnalysisContext context, StyleCopSettings settings)
@@ -112,7 +112,7 @@ namespace StyleCop.Analyzers.OrderingRules
 
             var compilationUnit = (NamespaceDeclarationSyntax)context.Node;
 
-            HandleMemberList(context, elementOrder, accessibilityIndex, compilationUnit.Members, AccessLevel.Internal);
+            HandleMemberList(context, elementOrder, accessibilityIndex, compilationUnit.Members);
         }
 
         private static void HandleTypeDeclaration(SyntaxNodeAnalysisContext context, StyleCopSettings settings)
@@ -126,12 +126,11 @@ namespace StyleCop.Analyzers.OrderingRules
 
             var typeDeclaration = (TypeDeclarationSyntax)context.Node;
 
-            HandleMemberList(context, elementOrder, accessibilityIndex, typeDeclaration.Members, AccessLevel.Private);
+            HandleMemberList(context, elementOrder, accessibilityIndex, typeDeclaration.Members);
         }
 
-        private static void HandleMemberList(SyntaxNodeAnalysisContext context, ImmutableArray<OrderingTrait> elementOrder, int accessibilityIndex, SyntaxList<MemberDeclarationSyntax> members, AccessLevel defaultAccessLevel)
+        private static void HandleMemberList(SyntaxNodeAnalysisContext context, ImmutableArray<OrderingTrait> elementOrder, int accessibilityIndex, SyntaxList<MemberDeclarationSyntax> members)
         {
-            MemberDeclarationSyntax previousMember = null;
             var previousSyntaxKind = SyntaxKind.None;
             var previousAccessLevel = AccessLevel.NotSpecified;
             bool previousIsConst = false;
@@ -212,7 +211,6 @@ namespace StyleCop.Analyzers.OrderingRules
                     }
                 }
 
-                previousMember = member;
                 previousSyntaxKind = currentSyntaxKind;
                 previousAccessLevel = currentAccessLevel;
                 previousIsConst = currentIsConst;

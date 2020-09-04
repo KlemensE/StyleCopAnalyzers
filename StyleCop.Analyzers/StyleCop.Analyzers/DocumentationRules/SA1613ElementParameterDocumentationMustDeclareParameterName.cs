@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.DocumentationRules
 {
@@ -7,10 +7,11 @@ namespace StyleCop.Analyzers.DocumentationRules
     using System.Collections.Immutable;
     using System.Linq;
     using System.Xml.Linq;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Diagnostics;
+    using StyleCop.Analyzers.Helpers;
+    using StyleCop.Analyzers.Settings.ObjectModel;
 
     /// <summary>
     /// A <c>&lt;param&gt;</c> tag within a C# element's documentation header is missing a <c>name</c> attribute
@@ -31,10 +32,10 @@ namespace StyleCop.Analyzers.DocumentationRules
         /// <see cref="SA1613ElementParameterDocumentationMustDeclareParameterName"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1613";
-        private const string Title = "Element parameter documentation should declare parameter name";
-        private const string MessageFormat = "Element parameter documentation should declare parameter name";
-        private const string Description = "A <param> tag within a C# element's documentation header is missing a name attribute containing the name of the parameter.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1613.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(DocumentationResources.SA1613Title), DocumentationResources.ResourceManager, typeof(DocumentationResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(DocumentationResources.SA1613MessageFormat), DocumentationResources.ResourceManager, typeof(DocumentationResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(DocumentationResources.SA1613Description), DocumentationResources.ResourceManager, typeof(DocumentationResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.DocumentationRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -42,7 +43,8 @@ namespace StyleCop.Analyzers.DocumentationRules
         /// <summary>
         /// Initializes a new instance of the <see cref="SA1613ElementParameterDocumentationMustDeclareParameterName"/> class.
         /// </summary>
-        /// <remarks>The presence of a &lt;inheritdoc/&gt; tag should NOT suppress warnings from this diagnostic. See DotNetAnalyzers/StyleCopAnalyzers#631</remarks>
+        /// <remarks><para>The presence of a &lt;inheritdoc/&gt; tag should NOT suppress warnings from this diagnostic.
+        /// See DotNetAnalyzers/StyleCopAnalyzers#631.</para></remarks>
         public SA1613ElementParameterDocumentationMustDeclareParameterName()
             : base(matchElementName: XmlCommentHelper.ParamXmlTag, inheritDocSuppressesWarnings: false)
         {
@@ -53,7 +55,7 @@ namespace StyleCop.Analyzers.DocumentationRules
             ImmutableArray.Create(Descriptor);
 
         /// <inheritdoc/>
-        protected override void HandleXmlElement(SyntaxNodeAnalysisContext context, bool needsComment, IEnumerable<XmlNodeSyntax> syntaxList, params Location[] diagnosticLocations)
+        protected override void HandleXmlElement(SyntaxNodeAnalysisContext context, StyleCopSettings settings, bool needsComment, IEnumerable<XmlNodeSyntax> syntaxList, params Location[] diagnosticLocations)
         {
             foreach (var syntax in syntaxList)
             {

@@ -1,15 +1,16 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.ReadabilityRules
 {
     using System;
     using System.Collections.Immutable;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Diagnostics;
+    using StyleCop.Analyzers.Helpers;
+    using StyleCop.Analyzers.Lightup;
 
     /// <summary>
     /// A call to an instance member of the local class or a base class is not prefixed with ‘this.’, within a C# code
@@ -38,10 +39,10 @@ namespace StyleCop.Analyzers.ReadabilityRules
         /// The ID for diagnostics produced by the <see cref="SA1101PrefixLocalCallsWithThis"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1101";
+        private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1101.md";
         private static readonly LocalizableString Title = new LocalizableResourceString(nameof(ReadabilityResources.SA1101Title), ReadabilityResources.ResourceManager, typeof(ReadabilityResources));
         private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(ReadabilityResources.SA1101MessageFormat), ReadabilityResources.ResourceManager, typeof(ReadabilityResources));
         private static readonly LocalizableString Description = new LocalizableResourceString(nameof(ReadabilityResources.SA1101Description), ReadabilityResources.ResourceManager, typeof(ReadabilityResources));
-        private static readonly string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1101.md";
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.ReadabilityRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -83,6 +84,8 @@ namespace StyleCop.Analyzers.ReadabilityRules
                 // this is handled separately
                 return;
 
+            case SyntaxKind.MemberBindingExpression:
+            case SyntaxKind.NameColon:
             case SyntaxKind.PointerMemberAccessExpression:
                 // this doesn't need to be handled
                 return;
@@ -122,8 +125,8 @@ namespace StyleCop.Analyzers.ReadabilityRules
 
                 break;
 
-            case SyntaxKind.MemberBindingExpression:
-                // this doesn't need to be handled
+            case SyntaxKind.Argument when IsPartOfConstructorInitializer((SimpleNameSyntax)context.Node):
+                // constructor invocations cannot contain this.
                 return;
 
             default:
@@ -179,10 +182,17 @@ namespace StyleCop.Analyzers.ReadabilityRules
                     return;
                 }
 
-                IMethodSymbol methodSymbol = symbol as IMethodSymbol;
-                if (methodSymbol != null && methodSymbol.MethodKind == MethodKind.Constructor)
+                if (symbol is IMethodSymbol methodSymbol)
                 {
-                    return;
+                    switch (methodSymbol.MethodKind)
+                    {
+                    case MethodKind.Constructor:
+                    case MethodKindEx.LocalFunction:
+                        return;
+
+                    default:
+                        break;
+                    }
                 }
 
                 // This is a workaround for:
@@ -235,20 +245,24 @@ namespace StyleCop.Analyzers.ReadabilityRules
                 case SyntaxKind.EventFieldDeclaration:
                     return false;
 
+                case SyntaxKind.EventDeclaration:
+                case SyntaxKind.IndexerDeclaration:
+                    var basePropertySyntax = (BasePropertyDeclarationSyntax)node;
+                    return !basePropertySyntax.Modifiers.Any(SyntaxKind.StaticKeyword);
+
+                case SyntaxKind.PropertyDeclaration:
+                    var propertySyntax = (PropertyDeclarationSyntax)node;
+                    return !propertySyntax.Modifiers.Any(SyntaxKind.StaticKeyword)
+                        && propertySyntax.Initializer == null;
+
                 case SyntaxKind.MultiLineDocumentationCommentTrivia:
                 case SyntaxKind.SingleLineDocumentationCommentTrivia:
                     return false;
 
-                case SyntaxKind.EventDeclaration:
-                case SyntaxKind.PropertyDeclaration:
-                case SyntaxKind.IndexerDeclaration:
-                    BasePropertyDeclarationSyntax basePropertySyntax = (BasePropertyDeclarationSyntax)node;
-                    return !basePropertySyntax.Modifiers.Any(SyntaxKind.StaticKeyword);
-
                 case SyntaxKind.ConstructorDeclaration:
                 case SyntaxKind.DestructorDeclaration:
                 case SyntaxKind.MethodDeclaration:
-                    BaseMethodDeclarationSyntax baseMethodSyntax = (BaseMethodDeclarationSyntax)node;
+                    var baseMethodSyntax = (BaseMethodDeclarationSyntax)node;
                     return !baseMethodSyntax.Modifiers.Any(SyntaxKind.StaticKeyword);
 
                 case SyntaxKind.Attribute:
@@ -256,6 +270,21 @@ namespace StyleCop.Analyzers.ReadabilityRules
 
                 default:
                     continue;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsPartOfConstructorInitializer(SyntaxNode node)
+        {
+            for (; node != null; node = node.Parent)
+            {
+                switch (node.Kind())
+                {
+                case SyntaxKind.ThisConstructorInitializer:
+                case SyntaxKind.BaseConstructorInitializer:
+                    return true;
                 }
             }
 

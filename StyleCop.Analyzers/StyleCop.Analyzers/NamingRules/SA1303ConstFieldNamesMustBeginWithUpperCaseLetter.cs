@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.NamingRules
 {
@@ -31,10 +31,10 @@ namespace StyleCop.Analyzers.NamingRules
         /// analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1303";
-        private const string Title = "Const field names should begin with upper-case letter";
-        private const string MessageFormat = "Const field names should begin with upper-case letter.";
-        private const string Description = "The name of a constant C# field should begin with an upper-case letter.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1303.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(NamingResources.SA1303Title), NamingResources.ResourceManager, typeof(NamingResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(NamingResources.SA1303MessageFormat), NamingResources.ResourceManager, typeof(NamingResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(NamingResources.SA1303Description), NamingResources.ResourceManager, typeof(NamingResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.NamingRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -51,16 +51,14 @@ namespace StyleCop.Analyzers.NamingRules
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
             context.EnableConcurrentExecution();
 
-            context.RegisterSymbolAction(Analyzer.HandleFieldDeclaration, SymbolKind.Field);
+            context.RegisterSymbolAction(FieldDeclarationAction, SymbolKind.Field);
         }
 
         private static class Analyzer
         {
             public static void HandleFieldDeclaration(SymbolAnalysisContext context)
             {
-                var symbol = context.Symbol as IFieldSymbol;
-
-                if (symbol == null || !symbol.IsConst || symbol.ContainingType?.TypeKind == TypeKind.Enum)
+                if (!(context.Symbol is IFieldSymbol symbol) || !symbol.IsConst || symbol.ContainingType?.TypeKind == TypeKind.Enum)
                 {
                     return;
                 }

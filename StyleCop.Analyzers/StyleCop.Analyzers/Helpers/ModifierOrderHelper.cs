@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.OrderingRules
 {
@@ -9,7 +9,7 @@ namespace StyleCop.Analyzers.OrderingRules
     internal static class ModifierOrderHelper
     {
         /// <summary>
-        /// Represents modifier type for implementing SA1206 rule
+        /// Represents modifier type for implementing SA1206 rule.
         /// </summary>
         internal enum ModifierType
         {
@@ -29,7 +29,7 @@ namespace StyleCop.Analyzers.OrderingRules
             Static,
 
             /// <summary>
-            /// Represents other modifiers i.e partial, virtual, abstract, override, extern, unsafe, new, async, const, sealed, readonly, volatile, fixed
+            /// Represents other modifiers i.e partial, virtual, abstract, override, extern, unsafe, new, async, const, sealed, readonly, volatile, fixed, ref
             /// </summary>
             Other,
         }
@@ -64,6 +64,7 @@ namespace StyleCop.Analyzers.OrderingRules
             case SyntaxKind.ConstKeyword:
             case SyntaxKind.AsyncKeyword:
             case SyntaxKind.PartialKeyword:
+            case SyntaxKind.RefKeyword:
                 result = ModifierType.Other;
                 break;
             }

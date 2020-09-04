@@ -1,22 +1,27 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.CSharp7.MaintainabilityRules
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.Testing;
     using StyleCop.Analyzers.Test.MaintainabilityRules;
     using TestHelper;
     using Xunit;
+    using static StyleCop.Analyzers.Test.Verifiers.StyleCopCodeFixVerifier<
+        StyleCop.Analyzers.MaintainabilityRules.SA1119StatementMustNotUseUnnecessaryParenthesis,
+        StyleCop.Analyzers.MaintainabilityRules.SA1119CodeFixProvider>;
 
     public class SA1119CSharp7UnitTests : SA1119UnitTests
     {
         /// <summary>
-        /// Verifies that extra parentheses in pattern matching are reported.
+        /// Verifies that extra parentheses in pattern matching is not reported.
         /// </summary>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         /// <seealso cref="SA1408CSharp7UnitTests.TestPatternMatchingAsync"/>
-        [Fact(Skip = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/2398")]
+        [Fact]
+        [WorkItem(2372, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/2398")]
         public async Task TestPatternMatchingAsync()
         {
             var testCode = @"public class Foo
@@ -29,27 +34,8 @@ namespace StyleCop.Analyzers.Test.CSharp7.MaintainabilityRules
         }
     }
 }";
-            var fixedCode = @"public class Foo
-{
-    public void Bar()
-    {
-        if (new object() is bool b && b)
-        {
-            return;
-        }
-    }
-}";
 
-            DiagnosticResult[] expected =
-            {
-                this.CSharpDiagnostic(DiagnosticId).WithLocation(5, 13),
-                this.CSharpDiagnostic(ParenthesesDiagnosticId).WithLocation(5, 13),
-                this.CSharpDiagnostic(ParenthesesDiagnosticId).WithLocation(5, 36),
-            };
-
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpFixAsync(testCode, fixedCode).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         [Fact]
@@ -68,7 +54,7 @@ namespace StyleCop.Analyzers.Test.CSharp7.MaintainabilityRules
     }
 }";
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         [Fact]
@@ -91,14 +77,12 @@ namespace StyleCop.Analyzers.Test.CSharp7.MaintainabilityRules
 
             DiagnosticResult[] expected =
             {
-                this.CSharpDiagnostic(DiagnosticId).WithLocation(5, 38),
-                this.CSharpDiagnostic(ParenthesesDiagnosticId).WithLocation(5, 38),
-                this.CSharpDiagnostic(ParenthesesDiagnosticId).WithLocation(5, 40),
+                Diagnostic(DiagnosticId).WithSpan(5, 38, 5, 41),
+                Diagnostic(ParenthesesDiagnosticId).WithLocation(5, 38),
+                Diagnostic(ParenthesesDiagnosticId).WithLocation(5, 40),
             };
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpFixAsync(testCode, fixedCode).ConfigureAwait(false);
+            await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
         }
     }
 }

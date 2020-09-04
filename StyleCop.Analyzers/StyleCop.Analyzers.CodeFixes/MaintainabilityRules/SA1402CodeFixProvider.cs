@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.MaintainabilityRules
 {
@@ -56,8 +56,7 @@ namespace StyleCop.Analyzers.MaintainabilityRules
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             SyntaxNode node = root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true);
-            var memberDeclarationSyntax = node as MemberDeclarationSyntax;
-            if (memberDeclarationSyntax == null)
+            if (!(node is MemberDeclarationSyntax memberDeclarationSyntax))
             {
                 return document.Project.Solution;
             }

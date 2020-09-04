@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.ReadabilityRules
 {
@@ -7,12 +7,12 @@ namespace StyleCop.Analyzers.ReadabilityRules
     using System.Collections.Immutable;
     using System.Composition;
     using System.Threading.Tasks;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using StyleCop.Analyzers.Helpers;
 
     /// <summary>
     /// This class provides a code fix for <see cref="SA1101PrefixLocalCallsWithThis"/>.
@@ -44,8 +44,7 @@ namespace StyleCop.Analyzers.ReadabilityRules
 
             foreach (var diagnostic in context.Diagnostics)
             {
-                var node = root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true) as SimpleNameSyntax;
-                if (node == null)
+                if (!(root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true) is SimpleNameSyntax node))
                 {
                     return;
                 }
@@ -91,8 +90,7 @@ namespace StyleCop.Analyzers.ReadabilityRules
 
                 foreach (Diagnostic diagnostic in diagnostics)
                 {
-                    var node = syntaxRoot.FindNode(diagnostic.Location.SourceSpan, false, true) as SimpleNameSyntax;
-                    if (node == null || node.IsMissing)
+                    if (!(syntaxRoot.FindNode(diagnostic.Location.SourceSpan, false, true) is SimpleNameSyntax node) || node.IsMissing)
                     {
                         continue;
                     }

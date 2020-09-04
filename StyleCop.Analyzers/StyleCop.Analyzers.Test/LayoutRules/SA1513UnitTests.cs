@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.LayoutRules
 {
@@ -8,14 +8,18 @@ namespace StyleCop.Analyzers.Test.LayoutRules
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Diagnostics;
+    using Microsoft.CodeAnalysis.Testing;
     using StyleCop.Analyzers.LayoutRules;
     using TestHelper;
     using Xunit;
+    using static StyleCop.Analyzers.Test.Verifiers.StyleCopCodeFixVerifier<
+        StyleCop.Analyzers.LayoutRules.SA1513ClosingBraceMustBeFollowedByBlankLine,
+        StyleCop.Analyzers.LayoutRules.SA1513CodeFixProvider>;
 
     /// <summary>
-    /// Unit tests for <see cref="SA1513ClosingBraceMustBeFollowedByBlankLine"/>
+    /// Unit tests for <see cref="SA1513ClosingBraceMustBeFollowedByBlankLine"/>.
     /// </summary>
-    public class SA1513UnitTests : CodeFixVerifier
+    public class SA1513UnitTests
     {
         /// <summary>
         /// Verifies that all valid usages of a closing brace without a following blank line will report no diagnostic.
@@ -424,7 +428,7 @@ public class Foo
 }
 ";
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -530,31 +534,31 @@ public class Foo
             var expected = new[]
             {
                 // Invalid #1
-                this.CSharpDiagnostic().WithLocation(17, 10),
+                Diagnostic().WithLocation(17, 10),
 
                 // Invalid #2
-                this.CSharpDiagnostic().WithLocation(25, 6),
+                Diagnostic().WithLocation(25, 6),
 
                 // Invalid #3
-                this.CSharpDiagnostic().WithLocation(35, 14),
+                Diagnostic().WithLocation(35, 14),
 
                 // Invalid #4
-                this.CSharpDiagnostic().WithLocation(45, 10),
+                Diagnostic().WithLocation(45, 10),
 
                 // Invalid #5
-                this.CSharpDiagnostic().WithLocation(52, 10),
+                Diagnostic().WithLocation(52, 10),
 
                 // Invalid #6
-                this.CSharpDiagnostic().WithLocation(65, 14),
+                Diagnostic().WithLocation(65, 14),
 
                 // Invalid #7
-                this.CSharpDiagnostic().WithLocation(73, 14),
+                Diagnostic().WithLocation(73, 14),
 
                 // Invalid #8
-                this.CSharpDiagnostic().WithLocation(87, 18),
+                Diagnostic().WithLocation(87, 18),
             };
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -722,7 +726,16 @@ public class Foo
 }
 ";
 
-            await this.VerifyCSharpFixAsync(testCode, fixedTestCode).ConfigureAwait(false);
+            DiagnosticResult[] expected =
+            {
+                Diagnostic().WithLocation(18, 10),
+                Diagnostic().WithLocation(26, 6),
+                Diagnostic().WithLocation(36, 14),
+                Diagnostic().WithLocation(46, 10),
+                Diagnostic().WithLocation(53, 10),
+                Diagnostic().WithLocation(69, 18),
+            };
+            await VerifyCSharpFixAsync(testCode, expected, fixedTestCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         // This is a regression test for #2062.
@@ -774,10 +787,8 @@ public class TestClass
 }
 ";
 
-            var expected = this.CSharpDiagnostic().WithLocation(16, 14);
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpFixAsync(testCode, fixedCode).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            var expected = Diagnostic().WithLocation(16, 14);
+            await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -808,15 +819,15 @@ public class TestClass
 }
 ";
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Verifies that having an initializer as last parameter / argument will not raise any diagnostics.
-        /// This is a regression for #1713
         /// </summary>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
+        [WorkItem(1713, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/1713")]
         public async Task VerifyThatInitializerAsLastParameterWillNotProduceDiagnosticAsync()
         {
             var testCode = @"
@@ -865,15 +876,15 @@ public class Program
 }
 ";
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Verifies that code commented out with four slashes is accepted.
-        /// This is a regression test for #2041
         /// </summary>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
+        [WorkItem(2041, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/2041")]
         public async Task TestFourSlashCommentsAsync()
         {
             var testCode = @"
@@ -895,7 +906,7 @@ public class TestClass
 }
 ";
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -982,19 +993,7 @@ public class TestClass3
 }
 ";
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
-        }
-
-        /// <inheritdoc/>
-        protected override IEnumerable<DiagnosticAnalyzer> GetCSharpDiagnosticAnalyzers()
-        {
-            yield return new SA1513ClosingBraceMustBeFollowedByBlankLine();
-        }
-
-        /// <inheritdoc/>
-        protected override CodeFixProvider GetCSharpCodeFixProvider()
-        {
-            return new SA1513CodeFixProvider();
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
     }
 }

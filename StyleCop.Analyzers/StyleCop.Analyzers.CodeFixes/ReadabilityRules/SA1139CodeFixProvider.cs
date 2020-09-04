@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.ReadabilityRules
 {
@@ -9,13 +9,13 @@ namespace StyleCop.Analyzers.ReadabilityRules
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Text;
+    using StyleCop.Analyzers.Helpers;
 
     /// <summary>
     /// Implements a code fix for <see cref="SA1139UseLiteralSuffixNotationInsteadOfCasting"/>.
@@ -24,22 +24,6 @@ namespace StyleCop.Analyzers.ReadabilityRules
     [Shared]
     internal class SA1139CodeFixProvider : CodeFixProvider
     {
-        private static readonly Dictionary<SyntaxKind, string> LiteralSyntaxKindToSuffix = new Dictionary<SyntaxKind, string>()
-            {
-                { SyntaxKind.IntKeyword, string.Empty },
-                { SyntaxKind.LongKeyword, "L" },
-                { SyntaxKind.ULongKeyword, "UL" },
-                { SyntaxKind.UIntKeyword, "U" },
-                { SyntaxKind.FloatKeyword, "F" },
-                { SyntaxKind.DoubleKeyword, "D" },
-                { SyntaxKind.DecimalKeyword, "M" },
-            };
-
-        private static readonly char[] LettersAllowedInLiteralSuffix = LiteralSyntaxKindToSuffix.Values
-            .SelectMany(s => s.ToCharArray()).Distinct()
-            .SelectMany(c => new[] { char.ToLowerInvariant(c), c })
-            .ToArray();
-
         /// <inheritdoc/>
         public override ImmutableArray<string> FixableDiagnosticIds { get; } =
             ImmutableArray.Create(SA1139UseLiteralSuffixNotationInsteadOfCasting.DiagnosticId);
@@ -60,13 +44,15 @@ namespace StyleCop.Analyzers.ReadabilityRules
             return SpecializedTasks.CompletedTask;
         }
 
+        /// <inheritdoc/>
+        public override FixAllProvider GetFixAllProvider()
+            => CustomFixAllProviders.BatchFixer;
+
         private static async Task<Document> GetTransformedDocumentAsync(Document document, Diagnostic diagnostic, CancellationToken cancellationToken)
         {
             var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-            var oldSemanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 
-            var node = syntaxRoot.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true) as CastExpressionSyntax;
-            if (node == null)
+            if (!(syntaxRoot.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true) is CastExpressionSyntax node))
             {
                 return document;
             }
@@ -74,50 +60,31 @@ namespace StyleCop.Analyzers.ReadabilityRules
             var replacementNode = GenerateReplacementNode(node);
             var newSyntaxRoot = syntaxRoot.ReplaceNode(node, replacementNode);
             var newDocument = document.WithSyntaxRoot(newSyntaxRoot);
-            var newSemanticModel = await newDocument.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-            var newNode = newSemanticModel.SyntaxTree.GetRoot().FindNode(
-                span: new TextSpan(start: node.FullSpan.Start, length: replacementNode.FullSpan.Length),
-                getInnermostNodeForTie: true);
-
-            var oldConstantValue = oldSemanticModel.GetConstantValue(node).Value;
-            var newConstantValueOption = newSemanticModel.GetConstantValue(newNode, cancellationToken);
-            if (newConstantValueOption.HasValue && oldConstantValue.Equals(newConstantValueOption.Value))
-            {
-                return newDocument;
-            }
-            else
-            {
-                var newNodeBasedOnValue = GenerateReplacementNodeBasedOnValue(node, oldConstantValue);
-                newSyntaxRoot = syntaxRoot.ReplaceNode(node, newNodeBasedOnValue);
-                return document.WithSyntaxRoot(newSyntaxRoot);
-            }
+            return newDocument;
         }
 
         private static SyntaxNode GenerateReplacementNode(CastExpressionSyntax node)
         {
-            var plusMinusSyntax = node.Expression as PrefixUnaryExpressionSyntax;
             var literalExpressionSyntax =
-                plusMinusSyntax == null ?
-                (LiteralExpressionSyntax)node.Expression :
-                (LiteralExpressionSyntax)plusMinusSyntax.Operand;
+                !(node.Expression.WalkDownParentheses() is PrefixUnaryExpressionSyntax plusMinusSyntax) ?
+                (LiteralExpressionSyntax)node.Expression.WalkDownParentheses() :
+                (LiteralExpressionSyntax)plusMinusSyntax.Operand.WalkDownParentheses();
             var typeToken = node.Type.GetFirstToken();
-            var prefix = plusMinusSyntax == null
-                ? string.Empty
-                : plusMinusSyntax.OperatorToken.Text;
-            var literalWithoutSuffix = literalExpressionSyntax.StripLiteralSuffix();
-            var correspondingSuffix = LiteralSyntaxKindToSuffix[typeToken.Kind()];
-            var fixedCodePreservingText = SyntaxFactory.ParseExpression(prefix + literalWithoutSuffix + correspondingSuffix);
+            var replacementLiteral = literalExpressionSyntax.WithLiteralSuffix(typeToken.Kind());
 
-            return fixedCodePreservingText.WithTriviaFrom(node);
-        }
+            var newLeadingTrivia = SyntaxFactory.TriviaList(node.GetLeadingTrivia().Concat(node.CloseParenToken.TrailingTrivia).Concat(node.Expression.GetLeadingTrivia()))
+                .WithoutLeadingWhitespace()
+                .WithoutTrailingWhitespace();
 
-        private static SyntaxNode GenerateReplacementNodeBasedOnValue(CastExpressionSyntax node, object desiredValue)
-        {
-            var typeToken = node.Type.GetFirstToken();
-            var correspondingSuffix = LiteralSyntaxKindToSuffix[typeToken.Kind()];
-            var fixedCodePreservingText = SyntaxFactory.ParseExpression(desiredValue + correspondingSuffix);
+            if (newLeadingTrivia.Count != 0)
+            {
+                newLeadingTrivia = newLeadingTrivia.Add(SyntaxFactory.Space);
+            }
 
-            return fixedCodePreservingText.WithTriviaFrom(node);
+            var replacementNode = node.Expression.ReplaceNode(literalExpressionSyntax, replacementLiteral)
+                .WithLeadingTrivia(newLeadingTrivia);
+
+            return replacementNode;
         }
     }
 }

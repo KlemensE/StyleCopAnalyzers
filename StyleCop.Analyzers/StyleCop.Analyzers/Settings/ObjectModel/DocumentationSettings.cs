@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Settings.ObjectModel
 {
     using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
+    using System.Linq;
     using System.Text.RegularExpressions;
     using LightJson;
 
@@ -27,69 +28,79 @@ namespace StyleCop.Analyzers.Settings.ObjectModel
         internal const string DefaultDocumentationCulture = "en-US";
 
         /// <summary>
+        /// The default value for the <see cref="ExcludeFromPunctuationCheck"/> property.
+        /// </summary>
+        internal static readonly ImmutableArray<string> DefaultExcludeFromPunctuationCheck = ImmutableArray.Create("seealso");
+
+        /// <summary>
         /// This is the backing field for the <see cref="CompanyName"/> property.
         /// </summary>
-        private string companyName;
+        private readonly string companyName;
 
         /// <summary>
         /// This is the backing field for the <see cref="GetCopyrightText(string)"/> method.
         /// </summary>
-        private string copyrightText;
+        private readonly string copyrightText;
+
+        /// <summary>
+        /// This is the backing field for the <see cref="HeaderDecoration"/> property.
+        /// </summary>
+        private readonly string headerDecoration;
+
+        /// <summary>
+        /// This is the backing field for the <see cref="Variables"/> property.
+        /// </summary>
+        private readonly ImmutableDictionary<string, string>.Builder variables;
+
+        /// <summary>
+        /// This is the backing field for the <see cref="XmlHeader"/> property.
+        /// </summary>
+        private readonly bool xmlHeader;
+
+        /// <summary>
+        /// This is the backing field for the <see cref="DocumentExposedElements"/> property.
+        /// </summary>
+        private readonly bool documentExposedElements;
+
+        /// <summary>
+        /// This is the backing field for the <see cref="DocumentInternalElements"/> property.
+        /// </summary>
+        private readonly bool documentInternalElements;
+
+        /// <summary>
+        /// This is the backing field for the <see cref="DocumentPrivateElements"/> property.
+        /// </summary>
+        private readonly bool documentPrivateElements;
+
+        /// <summary>
+        /// This is the backing field for the <see cref="DocumentInterfaces"/> property.
+        /// </summary>
+        private readonly bool documentInterfaces;
+
+        /// <summary>
+        /// This is the backing field for the <see cref="DocumentPrivateFields"/> property.
+        /// </summary>
+        private readonly bool documentPrivateFields;
+
+        /// <summary>
+        /// This is the backing field for the <see cref="FileNamingConvention"/> property.
+        /// </summary>
+        private readonly FileNamingConvention fileNamingConvention;
+
+        /// <summary>
+        /// This is the backing field for the <see cref="DocumentationCulture"/> property.
+        /// </summary>
+        private readonly string documentationCulture;
+
+        /// <summary>
+        /// This is the backing field for the <see cref="ExcludeFromPunctuationCheck"/> property.
+        /// </summary>
+        private readonly ImmutableArray<string> excludeFromPunctuationCheck;
 
         /// <summary>
         /// This is the cache for the <see cref="GetCopyrightText(string)"/> method.
         /// </summary>
         private string copyrightTextCache;
-
-        /// <summary>
-        /// This is the backing field for the <see cref="HeaderDecoration"/> property.
-        /// </summary>
-        private string headerDecoration;
-
-        /// <summary>
-        /// This is the backing field for the <see cref="Variables"/> property.
-        /// </summary>
-        private ImmutableDictionary<string, string>.Builder variables;
-
-        /// <summary>
-        /// This is the backing field for the <see cref="XmlHeader"/> property.
-        /// </summary>
-        private bool xmlHeader;
-
-        /// <summary>
-        /// This is the backing field for the <see cref="DocumentExposedElements"/> property.
-        /// </summary>
-        private bool documentExposedElements;
-
-        /// <summary>
-        /// This is the backing field for the <see cref="DocumentInternalElements"/> property.
-        /// </summary>
-        private bool documentInternalElements;
-
-        /// <summary>
-        /// This is the backing field for the <see cref="DocumentPrivateElements"/> property.
-        /// </summary>
-        private bool documentPrivateElements;
-
-        /// <summary>
-        /// This is the backing field for the <see cref="DocumentInterfaces"/> property.
-        /// </summary>
-        private bool documentInterfaces;
-
-        /// <summary>
-        /// This is the backing field for the <see cref="DocumentPrivateFields"/> property.
-        /// </summary>
-        private bool documentPrivateFields;
-
-        /// <summary>
-        /// This is the backing field for the <see cref="FileNamingConvention"/> property.
-        /// </summary>
-        private FileNamingConvention fileNamingConvention;
-
-        /// <summary>
-        /// This is the backing field for the <see cref="DocumentationCulture"/> property.
-        /// </summary>
-        private string documentationCulture;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DocumentationSettings"/> class during JSON deserialization.
@@ -111,6 +122,8 @@ namespace StyleCop.Analyzers.Settings.ObjectModel
             this.fileNamingConvention = FileNamingConvention.StyleCop;
 
             this.documentationCulture = DefaultDocumentationCulture;
+
+            this.excludeFromPunctuationCheck = DefaultExcludeFromPunctuationCheck;
         }
 
         /// <summary>
@@ -185,6 +198,17 @@ namespace StyleCop.Analyzers.Settings.ObjectModel
                     this.documentationCulture = kvp.ToStringValue();
                     break;
 
+                case "excludeFromPunctuationCheck":
+                    kvp.AssertIsArray();
+                    var excludedTags = ImmutableArray.CreateBuilder<string>();
+                    foreach (var value in kvp.Value.AsJsonArray)
+                    {
+                        excludedTags.Add(value.AsString);
+                    }
+
+                    this.excludeFromPunctuationCheck = excludedTags.ToImmutable();
+                    break;
+
                 default:
                     break;
                 }
@@ -244,6 +268,9 @@ namespace StyleCop.Analyzers.Settings.ObjectModel
         public string DocumentationCulture =>
             this.documentationCulture;
 
+        public ImmutableArray<string> ExcludeFromPunctuationCheck
+            => this.excludeFromPunctuationCheck;
+
         public string GetCopyrightText(string fileName)
         {
             string copyrightText = this.copyrightTextCache;
@@ -266,41 +293,41 @@ namespace StyleCop.Analyzers.Settings.ObjectModel
         private KeyValuePair<string, bool> BuildCopyrightText(string fileName)
         {
             bool canCache = true;
-            string pattern = Regex.Escape("{") + "(?<Property>[a-zA-Z0-9]+)" + Regex.Escape("}");
-            MatchEvaluator evaluator =
-                match =>
+
+            string Evaluator(Match match)
+            {
+                string key = match.Groups["Property"].Value;
+                switch (key)
                 {
-                    string key = match.Groups["Property"].Value;
-                    switch (key)
+                case "companyName":
+                    return this.CompanyName;
+
+                case "copyrightText":
+                    return "[CircularReference]";
+
+                default:
+                    string value;
+                    if (this.Variables.TryGetValue(key, out value))
                     {
-                    case "companyName":
-                        return this.CompanyName;
-
-                    case "copyrightText":
-                        return "[CircularReference]";
-
-                    default:
-                        string value;
-                        if (this.Variables.TryGetValue(key, out value))
-                        {
-                            return value;
-                        }
-
-                        if (key == "fileName")
-                        {
-                            // The 'fileName' built-in variable is only applied when the user did not include an
-                            // explicit value for a custom 'fileName' variable.
-                            canCache = false;
-                            return fileName;
-                        }
-
-                        break;
+                        return value;
                     }
 
-                    return "[InvalidReference]";
-                };
+                    if (key == "fileName")
+                    {
+                        // The 'fileName' built-in variable is only applied when the user did not include an
+                        // explicit value for a custom 'fileName' variable.
+                        canCache = false;
+                        return fileName;
+                    }
 
-            string expanded = Regex.Replace(this.copyrightText, pattern, evaluator);
+                    break;
+                }
+
+                return "[InvalidReference]";
+            }
+
+            string pattern = Regex.Escape("{") + "(?<Property>[a-zA-Z0-9]+)" + Regex.Escape("}");
+            string expanded = Regex.Replace(this.copyrightText, pattern, Evaluator);
             return new KeyValuePair<string, bool>(expanded, canCache);
         }
     }

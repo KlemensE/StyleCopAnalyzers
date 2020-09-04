@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.CSharp7.DocumentationRules
 {
@@ -8,6 +8,9 @@ namespace StyleCop.Analyzers.Test.CSharp7.DocumentationRules
     using StyleCop.Analyzers.DocumentationRules;
     using StyleCop.Analyzers.Test.DocumentationRules;
     using Xunit;
+    using static StyleCop.Analyzers.Test.Verifiers.StyleCopCodeFixVerifier<
+        StyleCop.Analyzers.DocumentationRules.PropertySummaryDocumentationAnalyzer,
+        StyleCop.Analyzers.DocumentationRules.PropertySummaryDocumentationCodeFixProvider>;
 
     public class SA1623CSharp7UnitTests : SA1623UnitTests
     {
@@ -45,6 +48,9 @@ namespace StyleCop.Analyzers.Test.CSharp7.DocumentationRules
         [InlineData("protected internal", "int", "{ private get => 0; set => this.field = value; }", "Sets")]
         [InlineData("internal", "int", "{ get => 0; private set => this.field = value; }", "Gets")]
         [InlineData("internal", "int", "{ private get => 0; set => this.field = value; }", "Sets")]
+
+        [WorkItem(2861, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/2861")]
+        [InlineData("public", "ref int", "{ get => throw null; }", "Gets")]
         public async Task VerifyDocumentationWithWrongStartingTextWillProduceDiagnosticWithExpressionBodiedAccessorsAsync(string accessibility, string type, string accessors, string expectedArgument)
         {
             var testCode = $@"
@@ -71,11 +77,8 @@ public class TestClass
 }}
 ";
 
-            var expected = this.CSharpDiagnostic(PropertySummaryDocumentationAnalyzer.SA1623Descriptor).WithLocation(9, 7 + accessibility.Length + type.Length).WithArguments(expectedArgument);
-
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedTestCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpFixAsync(testCode, fixedTestCode).ConfigureAwait(false);
+            var expected = Diagnostic(PropertySummaryDocumentationAnalyzer.SA1623Descriptor).WithLocation(9, 7 + accessibility.Length + type.Length).WithArguments(expectedArgument);
+            await VerifyCSharpFixAsync(testCode, expected, fixedTestCode, CancellationToken.None).ConfigureAwait(false);
         }
     }
 }

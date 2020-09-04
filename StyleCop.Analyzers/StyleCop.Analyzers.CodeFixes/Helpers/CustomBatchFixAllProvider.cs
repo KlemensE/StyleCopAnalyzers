@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Helpers
 {
@@ -249,8 +249,7 @@ namespace StyleCop.Analyzers.Helpers
                 ApplyChangesOperation singleApplyChangesOperation = null;
                 foreach (var operation in operations)
                 {
-                    ApplyChangesOperation applyChangesOperation = operation as ApplyChangesOperation;
-                    if (applyChangesOperation == null)
+                    if (!(operation is ApplyChangesOperation applyChangesOperation))
                     {
                         continue;
                     }

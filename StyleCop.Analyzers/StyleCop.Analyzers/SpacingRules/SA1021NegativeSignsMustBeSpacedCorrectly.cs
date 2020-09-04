@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.SpacingRules
 {
@@ -17,7 +17,8 @@ namespace StyleCop.Analyzers.SpacingRules
     /// <para>A violation of this rule occurs when the spacing around a negative sign is not correct.</para>
     ///
     /// <para>A negative sign should always be preceded by a single space, unless it comes after an opening square
-    /// bracket, a parenthesis, or is the first character on the line.</para>
+    /// bracket, a parenthesis, is the first character on the line, or is part of a string interpolation alignment
+    /// component.</para>
     ///
     /// <para>A negative sign should never be followed by whitespace, and should never be the last character on a
     /// line.</para>
@@ -29,10 +30,10 @@ namespace StyleCop.Analyzers.SpacingRules
         /// The ID for diagnostics produced by the <see cref="SA1021NegativeSignsMustBeSpacedCorrectly"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1021";
-        private const string Title = "Negative signs should be spaced correctly";
-        private const string MessageFormat = "Negative sign should{0} be {1} by a space.";
-        private const string Description = "A negative sign within a C# element is not spaced correctly.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1021.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(SpacingResources.SA1021Title), SpacingResources.ResourceManager, typeof(SpacingResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(SpacingResources.SA1021MessageFormat), SpacingResources.ResourceManager, typeof(SpacingResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(SpacingResources.SA1021Description), SpacingResources.ResourceManager, typeof(SpacingResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.SpacingRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -81,11 +82,20 @@ namespace StyleCop.Analyzers.SpacingRules
                 return;
             }
 
+            var isInInterpolationAlignmentClause = token.Parent.Parent.IsKind(SyntaxKind.InterpolationAlignmentClause);
+            if (isInInterpolationAlignmentClause && !token.IsFollowedByWhitespace())
+            {
+                // SA1001 is already handling the case like: line.Append($"{testResult.DisplayName, -75}");
+                // Where the extra space before the minus sign is undesirable.
+                return;
+            }
+
             bool precededBySpace = true;
             bool firstInLine = token.IsFirstInLine();
             bool followsSpecialCharacter = false;
 
             bool followedBySpace = token.IsFollowedByWhitespace();
+            bool interpolatedUnaryExpression = token.IsInterpolatedUnaryExpression();
             bool lastInLine = token.IsLastInLine();
 
             if (!firstInLine)
@@ -96,10 +106,11 @@ namespace StyleCop.Analyzers.SpacingRules
                 followsSpecialCharacter =
                     precedingToken.IsKind(SyntaxKind.OpenBracketToken)
                     || precedingToken.IsKind(SyntaxKind.OpenParenToken)
-                    || precedingToken.IsKind(SyntaxKind.CloseParenToken);
+                    || precedingToken.IsKind(SyntaxKind.CloseParenToken)
+                    || (precedingToken.IsKind(SyntaxKind.OpenBraceToken) && interpolatedUnaryExpression);
             }
 
-            if (!firstInLine)
+            if (!firstInLine && !isInInterpolationAlignmentClause)
             {
                 if (!followsSpecialCharacter && !precededBySpace)
                 {

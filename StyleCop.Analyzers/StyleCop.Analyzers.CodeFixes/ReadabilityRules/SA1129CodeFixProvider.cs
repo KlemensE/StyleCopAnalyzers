@@ -1,20 +1,21 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.ReadabilityRules
 {
     using System;
     using System.Collections.Immutable;
     using System.Composition;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using StyleCop.Analyzers.Helpers;
 
     /// <summary>
     /// Implements a code fix for <see cref="SA1129DoNotUseDefaultValueTypeConstructor"/>.
@@ -65,14 +66,42 @@ namespace StyleCop.Analyzers.ReadabilityRules
             var symbolInfo = semanticModel.GetSymbolInfo(newExpression.Type, cancellationToken);
             var namedTypeSymbol = symbolInfo.Symbol as INamedTypeSymbol;
 
-            SyntaxNode replacement = null;
-            string memberName = null;
+            SyntaxNode replacement;
 
-            if (IsType<CancellationToken>(namedTypeSymbol))
+            if (IsType<CancellationToken>(namedTypeSymbol)
+                || namedTypeSymbol?.SpecialType == SpecialType.System_IntPtr
+                || namedTypeSymbol?.SpecialType == SpecialType.System_UIntPtr
+                || IsType<Guid>(namedTypeSymbol))
             {
-                replacement = ConstructMemberAccessSyntax(newExpression.Type, nameof(CancellationToken.None));
+                if (IsDefaultParameterValue(newExpression))
+                {
+                    replacement = SyntaxFactory.DefaultExpression(newExpression.Type);
+                }
+                else
+                {
+                    string fieldName;
+                    if (IsType<CancellationToken>(namedTypeSymbol))
+                    {
+                        fieldName = nameof(CancellationToken.None);
+                    }
+                    else if (namedTypeSymbol.SpecialType == SpecialType.System_IntPtr)
+                    {
+                        fieldName = nameof(IntPtr.Zero);
+                    }
+                    else if (namedTypeSymbol.SpecialType == SpecialType.System_UIntPtr)
+                    {
+                        fieldName = nameof(IntPtr.Zero);
+                    }
+                    else
+                    {
+                        Debug.Assert(IsType<Guid>(namedTypeSymbol), "Assertion failed: IsType<Guid>(namedTypeSymbol)");
+                        fieldName = nameof(Guid.Empty);
+                    }
+
+                    replacement = ConstructMemberAccessSyntax(newExpression.Type, fieldName);
+                }
             }
-            else if (IsEnumWithDefaultMember(namedTypeSymbol, out memberName))
+            else if (IsEnumWithDefaultMember(namedTypeSymbol, out string memberName))
             {
                 replacement = ConstructMemberAccessSyntax(newExpression.Type, memberName);
             }
@@ -115,6 +144,16 @@ namespace StyleCop.Analyzers.ReadabilityRules
             }
 
             return true;
+        }
+
+        private static bool IsDefaultParameterValue(ObjectCreationExpressionSyntax expression)
+        {
+            if (expression.Parent.Parent is ParameterSyntax parameterSyntax)
+            {
+                return parameterSyntax.Parent.Parent is BaseMethodDeclarationSyntax;
+            }
+
+            return false;
         }
 
         /// <summary>

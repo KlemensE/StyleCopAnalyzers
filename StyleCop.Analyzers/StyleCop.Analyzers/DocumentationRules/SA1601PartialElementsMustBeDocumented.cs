@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.DocumentationRules
 {
@@ -48,7 +48,7 @@ namespace StyleCop.Analyzers.DocumentationRules
     /// When the documentation for this class is built into an SDK, the tool building the documentation will either
     /// choose to use only one part of the documentation for the class and ignore the other parts, or, in some cases, it
     /// may merge the two sources of documentation together, to form a string like: "Documentation for the first part of
-    /// Class1. Documentation for the second part of Class1."</para>
+    /// Class1. Documentation for the second part of Class1.".</para>
     ///
     /// <para>For these reasons, it can be problematic to provide SDK documentation on more than one part of the partial
     /// class. However, it is still advisable to document each part of the class, to increase the readability and
@@ -71,10 +71,10 @@ namespace StyleCop.Analyzers.DocumentationRules
         /// The ID for diagnostics produced by the <see cref="SA1601PartialElementsMustBeDocumented"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1601";
-        private const string Title = "Partial elements should be documented";
-        private const string MessageFormat = "Partial elements should be documented";
-        private const string Description = "A C# partial element is missing a documentation header.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1601.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(DocumentationResources.SA1601Title), DocumentationResources.ResourceManager, typeof(DocumentationResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(DocumentationResources.SA1601MessageFormat), DocumentationResources.ResourceManager, typeof(DocumentationResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(DocumentationResources.SA1601Description), DocumentationResources.ResourceManager, typeof(DocumentationResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.DocumentationRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);

@@ -1,18 +1,16 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Lightup
 {
     using System;
-    using System.Reflection;
     using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
 
     internal struct RefExpressionSyntaxWrapper : ISyntaxWrapper<ExpressionSyntax>
     {
-        private const string RefExpressionSyntaxTypeName = "Microsoft.CodeAnalysis.CSharp.Syntax.RefExpressionSyntax";
-        private static readonly Type RefExpressionSyntaxType;
+        internal const string WrappedTypeName = "Microsoft.CodeAnalysis.CSharp.Syntax.RefExpressionSyntax";
+        private static readonly Type WrappedType;
 
         private static readonly Func<ExpressionSyntax, SyntaxToken> RefKeywordAccessor;
         private static readonly Func<ExpressionSyntax, ExpressionSyntax> ExpressionAccessor;
@@ -23,11 +21,11 @@ namespace StyleCop.Analyzers.Lightup
 
         static RefExpressionSyntaxWrapper()
         {
-            RefExpressionSyntaxType = typeof(CSharpSyntaxNode).GetTypeInfo().Assembly.GetType(RefExpressionSyntaxTypeName);
-            RefKeywordAccessor = LightupHelpers.CreateSyntaxPropertyAccessor<ExpressionSyntax, SyntaxToken>(RefExpressionSyntaxType, nameof(RefKeyword));
-            ExpressionAccessor = LightupHelpers.CreateSyntaxPropertyAccessor<ExpressionSyntax, ExpressionSyntax>(RefExpressionSyntaxType, nameof(Expression));
-            WithRefKeywordAccessor = LightupHelpers.CreateSyntaxWithPropertyAccessor<ExpressionSyntax, SyntaxToken>(RefExpressionSyntaxType, nameof(RefKeyword));
-            WithExpressionAccessor = LightupHelpers.CreateSyntaxWithPropertyAccessor<ExpressionSyntax, ExpressionSyntax>(RefExpressionSyntaxType, nameof(Expression));
+            WrappedType = WrapperHelper.GetWrappedType(typeof(RefExpressionSyntaxWrapper));
+            RefKeywordAccessor = LightupHelpers.CreateSyntaxPropertyAccessor<ExpressionSyntax, SyntaxToken>(WrappedType, nameof(RefKeyword));
+            ExpressionAccessor = LightupHelpers.CreateSyntaxPropertyAccessor<ExpressionSyntax, ExpressionSyntax>(WrappedType, nameof(Expression));
+            WithRefKeywordAccessor = LightupHelpers.CreateSyntaxWithPropertyAccessor<ExpressionSyntax, SyntaxToken>(WrappedType, nameof(RefKeyword));
+            WithExpressionAccessor = LightupHelpers.CreateSyntaxWithPropertyAccessor<ExpressionSyntax, ExpressionSyntax>(WrappedType, nameof(Expression));
         }
 
         private RefExpressionSyntaxWrapper(ExpressionSyntax node)
@@ -57,12 +55,12 @@ namespace StyleCop.Analyzers.Lightup
         {
             if (node == null)
             {
-                return default(RefExpressionSyntaxWrapper);
+                return default;
             }
 
             if (!IsInstance(node))
             {
-                throw new InvalidCastException($"Cannot cast '{node.GetType().FullName}' to '{RefExpressionSyntaxTypeName}'");
+                throw new InvalidCastException($"Cannot cast '{node.GetType().FullName}' to '{WrappedTypeName}'");
             }
 
             return new RefExpressionSyntaxWrapper((ExpressionSyntax)node);
@@ -75,7 +73,7 @@ namespace StyleCop.Analyzers.Lightup
 
         public static bool IsInstance(SyntaxNode node)
         {
-            return node != null && LightupHelpers.CanWrapNode(node, RefExpressionSyntaxType);
+            return node != null && LightupHelpers.CanWrapNode(node, WrappedType);
         }
 
         public RefExpressionSyntaxWrapper WithRefKeyword(SyntaxToken refKeyword)

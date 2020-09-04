@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.DocumentationRules
 {
@@ -31,10 +31,10 @@ namespace StyleCop.Analyzers.DocumentationRules
         /// The ID for diagnostics produced by the <see cref="SA1615ElementReturnValueMustBeDocumented"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1615";
-        private const string Title = "Element return value should be documented";
-        private const string MessageFormat = "Element return value should be documented";
-        private const string Description = "A C# element is missing documentation for its return value.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1615.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(DocumentationResources.SA1615Title), DocumentationResources.ResourceManager, typeof(DocumentationResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(DocumentationResources.SA1615MessageFormat), DocumentationResources.ResourceManager, typeof(DocumentationResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(DocumentationResources.SA1615Description), DocumentationResources.ResourceManager, typeof(DocumentationResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.DocumentationRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -84,9 +84,8 @@ namespace StyleCop.Analyzers.DocumentationRules
                 return;
             }
 
-            var predefinedType = returnType as PredefinedTypeSyntax;
-
-            if (predefinedType != null && predefinedType.Keyword.IsKind(SyntaxKind.VoidKeyword))
+            if (returnType is PredefinedTypeSyntax predefinedType
+                && predefinedType.Keyword.IsKind(SyntaxKind.VoidKeyword))
             {
                 // There is no return value
                 return;

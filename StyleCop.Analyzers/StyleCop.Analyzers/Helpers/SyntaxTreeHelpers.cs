@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Helpers
 {
@@ -17,8 +17,8 @@ namespace StyleCop.Analyzers.Helpers
         /// A cache of the result of computing whether a document has using alias directives.
         /// </summary>
         /// <remarks>
-        /// This allows many analyzers that run on every token in the file to avoid checking
-        /// the same state in the document repeatedly.
+        /// <para>This allows many analyzers that run on every token in the file to avoid checking
+        /// the same state in the document repeatedly.</para>
         /// </remarks>
         private static Tuple<WeakReference<Compilation>, ConcurrentDictionary<SyntaxTree, bool>> usingAliasCache
             = Tuple.Create(new WeakReference<Compilation>(null), default(ConcurrentDictionary<SyntaxTree, bool>));

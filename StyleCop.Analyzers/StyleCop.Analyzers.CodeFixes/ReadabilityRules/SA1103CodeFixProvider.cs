@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.ReadabilityRules
 {
@@ -9,12 +9,12 @@ namespace StyleCop.Analyzers.ReadabilityRules
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using StyleCop.Analyzers.Helpers;
 
     /// <summary>
     /// This class provides a code fix for the SA1103 diagnostic.
@@ -153,7 +153,11 @@ namespace StyleCop.Analyzers.ReadabilityRules
         private static void ProcessQueryBody(QueryBodySyntax body, List<SyntaxNode> queryNodes)
         {
             queryNodes.AddRange(body.Clauses);
-            queryNodes.Add(body.SelectOrGroup);
+
+            if (!body.SelectOrGroup.IsMissing)
+            {
+                queryNodes.Add(body.SelectOrGroup);
+            }
 
             if (body.Continuation != null)
             {

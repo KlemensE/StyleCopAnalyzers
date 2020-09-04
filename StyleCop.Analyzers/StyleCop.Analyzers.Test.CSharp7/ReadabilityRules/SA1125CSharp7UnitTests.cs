@@ -1,21 +1,23 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.CSharp7.ReadabilityRules
 {
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.Testing;
     using StyleCop.Analyzers.Test.ReadabilityRules;
     using TestHelper;
     using Xunit;
+    using static StyleCop.Analyzers.Test.Verifiers.StyleCopDiagnosticVerifier<StyleCop.Analyzers.ReadabilityRules.SA1125UseShorthandForNullableTypes>;
 
     public class SA1125CSharp7UnitTests : SA1125UnitTests
     {
         /// <summary>
         /// This is a regression test for DotNetAnalyzers/StyleCopAnalyzers#386.
         /// <see href="https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/386">SA1125
-        /// UseShorthandForNullableTypes incorrectly reported in typeof()</see>
+        /// UseShorthandForNullableTypes incorrectly reported in typeof()</see>.
         /// </summary>
         /// <param name="longForm">The source code for the long form of a <c>cref</c> attribute referencing
         /// an instantiation of <see cref="Nullable{T}"/> in a <c>typeof</c> expression.</param>
@@ -48,9 +50,9 @@ namespace System
             string testCode = string.Format(template, longForm);
             string fixedCode = string.Format(template, shortForm);
 
-            DiagnosticResult expected = this.CSharpDiagnostic().WithLocation(7, 36);
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            DiagnosticResult expected = Diagnostic().WithLocation(7, 36);
+            await VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(fixedCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         [Theory]
@@ -77,9 +79,9 @@ namespace System
             string testCode = string.Format(template, longForm);
             string fixedCode = string.Format(template, shortForm);
 
-            DiagnosticResult expected = this.CSharpDiagnostic().WithLocation(7, 9);
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            DiagnosticResult expected = Diagnostic().WithLocation(7, 9);
+            await VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(fixedCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         [Theory]
@@ -109,15 +111,15 @@ namespace System
             string testCode = string.Format(template, longForm);
             string fixedCode = string.Format(template, shortForm);
 
-            DiagnosticResult expected = this.CSharpDiagnostic().WithLocation(9, 41);
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            DiagnosticResult expected = Diagnostic().WithLocation(9, 41);
+            await VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(fixedCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
         /// This is a regression test for DotNetAnalyzers/StyleCopAnalyzers#637.
         /// <see href="https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/637">SA1125
-        /// UseShorthandForNullableTypes incorrectly reported in <c>nameof</c> expression</see>
+        /// UseShorthandForNullableTypes incorrectly reported in <c>nameof</c> expression</see>.
         /// </summary>
         /// <param name="form">The source code for the content of a <c>nameof</c> expression referencing
         /// <see cref="Nullable{T}"/>.</param>
@@ -139,13 +141,13 @@ namespace System
 }}
 ";
             string testCode = string.Format(template, form);
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
         /// This is a regression test for DotNetAnalyzers/StyleCopAnalyzers#636.
         /// <see href="https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/636">SA1125
-        /// UseShorthandForNullableTypes incorrectly reported for static access through Nullable&lt;int&gt;</see>
+        /// UseShorthandForNullableTypes incorrectly reported for static access through Nullable&lt;int&gt;</see>.
         /// </summary>
         /// <remarks>
         /// <para>This special case of instance access through <c>Nullable&lt;int&gt;</c> was mentioned in a
@@ -171,13 +173,13 @@ namespace System
 }}
 ";
             string testCode = string.Format(template, form);
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
         /// This is a regression test for DotNetAnalyzers/StyleCopAnalyzers#636.
         /// <see href="https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/636">SA1125
-        /// UseShorthandForNullableTypes incorrectly reported for static access through Nullable&lt;int&gt;</see>
+        /// UseShorthandForNullableTypes incorrectly reported for static access through Nullable&lt;int&gt;</see>.
         /// </summary>
         /// <param name="form">The source code for an instantiation of <see cref="Nullable{T}"/> which does not use the
         /// shorthand syntax.</param>
@@ -199,7 +201,7 @@ namespace System
 }}
 ";
             string testCode = string.Format(template, form);
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         [Theory]
@@ -227,9 +229,9 @@ namespace System
             string testCode = string.Format(template, longForm);
             string fixedCode = string.Format(template, shortForm);
 
-            DiagnosticResult expected = this.CSharpDiagnostic().WithLocation(8, 43);
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            DiagnosticResult expected = Diagnostic().WithLocation(8, 43);
+            await VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(fixedCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         // This is a regression test for issue 2284.
@@ -252,9 +254,9 @@ namespace System
             string testCode = string.Format(template, longForm);
             string fixedCode = string.Format(template, shortForm);
 
-            DiagnosticResult expected = this.CSharpDiagnostic().WithLocation(7, 9);
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            DiagnosticResult expected = Diagnostic().WithLocation(7, 9);
+            await VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(fixedCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
     }
 }

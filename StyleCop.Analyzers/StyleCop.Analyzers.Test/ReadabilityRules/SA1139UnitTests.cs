@@ -1,23 +1,24 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.ReadabilityRules
 {
-    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Analyzers.ReadabilityRules;
-    using Microsoft.CodeAnalysis.CodeFixes;
-    using Microsoft.CodeAnalysis.Diagnostics;
+    using Microsoft.CodeAnalysis.Testing;
+    using StyleCop.Analyzers.ReadabilityRules;
     using TestHelper;
     using Xunit;
+    using static StyleCop.Analyzers.Test.Verifiers.StyleCopCodeFixVerifier<
+        StyleCop.Analyzers.ReadabilityRules.SA1139UseLiteralSuffixNotationInsteadOfCasting,
+        StyleCop.Analyzers.ReadabilityRules.SA1139CodeFixProvider>;
 
     /// <summary>
     /// This class contains unit tests for SA1139.
     /// </summary>
     /// <seealso cref="SA1139UseLiteralSuffixNotationInsteadOfCasting" />
     /// <seealso cref="SA1139CodeFixProvider" />
-    public class SA1139UnitTests : CodeFixVerifier
+    public class SA1139UnitTests
     {
         /// <summary>
         /// Verifies that using literals does not produce diagnostic.
@@ -58,7 +59,7 @@ class ClassName
     }}
 }}
 ";
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -72,6 +73,10 @@ class ClassName
         [InlineData("long", "1", "1L")]
         [InlineData("long", "+1", "+1L")]
         [InlineData("long", "-1", "-1L")]
+        [InlineData("long", "(+1)", "(+1L)")]
+        [InlineData("long", "(-1)", "(-1L)")]
+        [InlineData("long", "(1)", "(1L)")]
+        [InlineData("long", "(-(1))", "(-(1L))")]
         [InlineData("ulong", "1", "1UL")]
         [InlineData("ulong", "+1", "+1UL")]
         [InlineData("uint", "1", "1U")]
@@ -92,6 +97,10 @@ class ClassName
         [InlineData("ulong", "1l", "1UL")]
         [InlineData("ulong", "1U", "1UL")]
         [InlineData("ulong", "1u", "1UL")]
+        [InlineData("long", "0xF", "0xFL")]
+        [InlineData("long", "0x1", "0x1L")]
+        [InlineData("ulong", "0x1", "0x1UL")]
+        [InlineData("long", "-0x1", "-0x1L")]
         public async Task TestUsingCastsProducesDiagnosticAndCorrectCodefixAsync(string literalType, string castedLiteral, string correctLiteral)
         {
             var testCode = $@"
@@ -121,18 +130,17 @@ class ClassName
 ";
             DiagnosticResult[] expectedDiagnosticResult =
             {
-                this.CSharpDiagnostic().WithLocation(4, 10 + literalType.Length),
-                this.CSharpDiagnostic().WithLocation(8, 17),
+                Diagnostic().WithLocation(4, 10 + literalType.Length),
+                Diagnostic().WithLocation(8, 17),
             };
-            await this.VerifyCSharpDiagnosticAsync(testCode, expectedDiagnosticResult, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpFixAsync(testCode, fixedCode, cancellationToken: CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpFixAsync(testCode, expectedDiagnosticResult, fixedCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Verifies that redundant cast does not trigger diagnostic.
         /// </summary>
-        /// <param name="literal">A literal that is casted</param>
-        /// <param name="type">A type that literal is casted on</param>
+        /// <param name="literal">A literal that is casted.</param>
+        /// <param name="type">A type that literal is casted on.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Theory]
         [InlineData("1", "int")]
@@ -165,19 +173,28 @@ class ClassName
     }}
 }}
 ";
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Verifies that other types of casts should not produces diagnostics.
         /// </summary>
-        /// <param name="correctCastExpression">A legal cast that should not trigger diagnostic</param>
+        /// <param name="correctCastExpression">A legal cast that should not trigger diagnostic.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Theory]
         [InlineData("(long)~1")]
+        [InlineData("(long)(~1)")]
         [InlineData("(bool)true")]
         [InlineData("(bool)(false)")]
         [InlineData("(long)~+1")]
+        [InlineData("(long)(~+1)")]
+        [InlineData("unchecked((int)0x80000000)")]
+        [InlineData("unchecked((int)0xFFFFFFFF)")]
+        [InlineData("unchecked((ulong)-1)")]
+        [InlineData("unchecked((byte)-1)")]
+        [InlineData("(sbyte)-1")]
+        [InlineData("(int)-1")]
+        [InlineData("unchecked((ulong)-1L)")]
         public async Task TestOtherTypesOfCastsShouldNotTriggerDiagnosticAsync(string correctCastExpression)
         {
             var testCode = $@"
@@ -189,14 +206,14 @@ class ClassName
     }}
 }}
 ";
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Verifies that diagnostics is not produced when error CS0221 is reported.
         /// </summary>
-        /// <param name="type">A type that a literal is casted on</param>
-        /// <param name="castedLiteral">A literal that is casted</param>
+        /// <param name="type">A type that a literal is casted on.</param>
+        /// <param name="castedLiteral">A literal that is casted.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Theory]
         [InlineData("ulong", "-1")]
@@ -214,25 +231,24 @@ class ClassName
 
             DiagnosticResult[] expectedDiagnosticResult =
             {
-                this.CSharpCompilerError("CS0221")
+                DiagnosticResult.CompilerError("CS0221")
                     .WithMessage($"Constant value '{castedLiteral}' cannot be converted to a '{type}' (use 'unchecked' syntax to override)")
                     .WithLocation(6, 17),
             };
-            await this.VerifyCSharpDiagnosticAsync(testCode, expectedDiagnosticResult, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, expectedDiagnosticResult, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Verifies that using casts in unchecked enviroment produces diagnostics with a correct codefix.
+        /// Verifies that casts in unchecked environment do not get replaced with incorrect values.
         /// </summary>
-        /// <param name="castExpression">A cast which can be performend in unchecked enviroment</param>
-        /// <param name="correctLiteral">The corresponding literal with suffix</param>
+        /// <param name="castExpression">A cast which can be performed in unchecked environment.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Theory]
-        [InlineData("(ulong)-1L", "18446744073709551615UL")]
-        [InlineData("(int)1000000000000000000L", "-1486618624")]
-        [InlineData("(int)0xFFFFFFFFFFFFFFFFL", "-1")]
-        [InlineData("(uint)0xFFFFFFFFFFFFFFFFL", "4294967295U")]
-        public async Task TestCastsInUncheckedEnviromentShouldPreserveValueAsync(string castExpression, string correctLiteral)
+        [InlineData("(ulong)-1L")]
+        [InlineData("(int)1000000000000000000L")]
+        [InlineData("(int)0xFFFFFFFFFFFFFFFFL")]
+        [InlineData("(uint)0xFFFFFFFFFFFFFFFFL")]
+        public async Task TestCastsInUncheckedEnviromentShouldPreserveValueAsync(string castExpression)
         {
             var testCode = $@"
 class ClassName
@@ -247,36 +263,56 @@ class ClassName
     }}
 }}
 ";
-            var fixedCode = $@"
-class ClassName
-{{
-    public void Method()
-    {{
-        unchecked
-        {{
-            var x = {correctLiteral};
-        }}
-        var y = unchecked({correctLiteral});
-    }}
-}}
+
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verifies that the codefix will not insert extraneous spaces.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+        [Fact]
+        [WorkItem(2901, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/2901")]
+        public async Task TestCodeFixDoesNotAddExtraneousSpacesAsync()
+        {
+            var testCode = @"
+public class TestClass
+{
+    public void TestMethod()
+    {
+        var x = (long)64 * 1024;
+        var y = (double)64 /* test */ * 1024;
+        var z = (long) /* test */ 64 * 1024;
+        var a = (double)64 // dividend
+            / (double)4; // divisor
+    }
+}
 ";
+
+            var fixedCode = @"
+public class TestClass
+{
+    public void TestMethod()
+    {
+        var x = 64L * 1024;
+        var y = 64D /* test */ * 1024;
+        var z = /* test */ 64L * 1024;
+        var a = 64D // dividend
+            / 4D; // divisor
+    }
+}
+";
+
             DiagnosticResult[] expectedDiagnosticResult =
             {
-                this.CSharpDiagnostic().WithLocation(8, 21),
-                this.CSharpDiagnostic().WithLocation(10, 27),
+                Diagnostic().WithLocation(6, 17),
+                Diagnostic().WithLocation(7, 17),
+                Diagnostic().WithLocation(8, 17),
+                Diagnostic().WithLocation(9, 17),
+                Diagnostic().WithLocation(10, 15),
             };
-            await this.VerifyCSharpDiagnosticAsync(testCode, expectedDiagnosticResult, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpFixAsync(testCode, fixedCode, cancellationToken: CancellationToken.None).ConfigureAwait(false);
-        }
 
-        protected override CodeFixProvider GetCSharpCodeFixProvider()
-        {
-            return new SA1139CodeFixProvider();
-        }
-
-        protected override IEnumerable<DiagnosticAnalyzer> GetCSharpDiagnosticAnalyzers()
-        {
-            yield return new SA1139UseLiteralSuffixNotationInsteadOfCasting();
+            await VerifyCSharpFixAsync(testCode, expectedDiagnosticResult, fixedCode, CancellationToken.None).ConfigureAwait(false);
         }
     }
 }

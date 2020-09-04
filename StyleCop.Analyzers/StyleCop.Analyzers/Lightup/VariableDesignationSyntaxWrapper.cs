@@ -1,23 +1,22 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Lightup
 {
     using System;
-    using System.Reflection;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
     internal struct VariableDesignationSyntaxWrapper : ISyntaxWrapper<CSharpSyntaxNode>
     {
-        private const string VariableDesignationSyntaxTypeName = "Microsoft.CodeAnalysis.CSharp.Syntax.VariableDesignationSyntax";
-        private static readonly Type VariableDesignationSyntaxType;
+        internal const string WrappedTypeName = "Microsoft.CodeAnalysis.CSharp.Syntax.VariableDesignationSyntax";
+        private static readonly Type WrappedType;
 
         private readonly CSharpSyntaxNode node;
 
         static VariableDesignationSyntaxWrapper()
         {
-            VariableDesignationSyntaxType = typeof(CSharpSyntaxNode).GetTypeInfo().Assembly.GetType(VariableDesignationSyntaxTypeName);
+            WrappedType = WrapperHelper.GetWrappedType(typeof(VariableDesignationSyntaxWrapper));
         }
 
         private VariableDesignationSyntaxWrapper(CSharpSyntaxNode node)
@@ -31,12 +30,12 @@ namespace StyleCop.Analyzers.Lightup
         {
             if (node == null)
             {
-                return default(VariableDesignationSyntaxWrapper);
+                return default;
             }
 
             if (!IsInstance(node))
             {
-                throw new InvalidCastException($"Cannot cast '{node.GetType().FullName}' to '{VariableDesignationSyntaxTypeName}'");
+                throw new InvalidCastException($"Cannot cast '{node.GetType().FullName}' to '{WrappedTypeName}'");
             }
 
             return new VariableDesignationSyntaxWrapper((CSharpSyntaxNode)node);
@@ -49,7 +48,7 @@ namespace StyleCop.Analyzers.Lightup
 
         public static bool IsInstance(SyntaxNode node)
         {
-            return node != null && LightupHelpers.CanWrapNode(node, VariableDesignationSyntaxType);
+            return node != null && LightupHelpers.CanWrapNode(node, WrappedType);
         }
 
         internal static VariableDesignationSyntaxWrapper FromUpcast(CSharpSyntaxNode node)

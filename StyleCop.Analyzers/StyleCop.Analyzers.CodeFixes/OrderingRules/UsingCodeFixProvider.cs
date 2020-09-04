@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.OrderingRules
 {
@@ -10,13 +10,13 @@ namespace StyleCop.Analyzers.OrderingRules
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
-    using Settings.ObjectModel;
+    using StyleCop.Analyzers.Helpers;
+    using StyleCop.Analyzers.Settings.ObjectModel;
 
     /// <summary>
     /// Implements a code fix for all misaligned using statements.
@@ -29,7 +29,9 @@ namespace StyleCop.Analyzers.OrderingRules
 
         private static readonly List<UsingDirectiveSyntax> EmptyUsingsList = new List<UsingDirectiveSyntax>();
         private static readonly SyntaxAnnotation UsingCodeFixAnnotation = new SyntaxAnnotation(nameof(UsingCodeFixAnnotation));
-        private static readonly SymbolDisplayFormat FullNamespaceDisplayFormat = SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted);
+        private static readonly SymbolDisplayFormat FullNamespaceDisplayFormat = SymbolDisplayFormat.FullyQualifiedFormat
+            .WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)
+            .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers);
 
         /// <inheritdoc/>
         public override ImmutableArray<string> FixableDiagnosticIds { get; } =
@@ -422,7 +424,7 @@ namespace StyleCop.Analyzers.OrderingRules
             private readonly List<UsingDirectiveSyntax> stripList;
             private readonly Dictionary<UsingDirectiveSyntax, UsingDirectiveSyntax> replaceMap;
             private readonly ImmutableArray<SyntaxTrivia> fileHeader;
-            private LinkedList<SyntaxToken> tokensToStrip = new LinkedList<SyntaxToken>();
+            private readonly LinkedList<SyntaxToken> tokensToStrip = new LinkedList<SyntaxToken>();
 
             public UsingSyntaxRewriter(List<UsingDirectiveSyntax> stripList, Dictionary<UsingDirectiveSyntax, UsingDirectiveSyntax> replaceMap, ImmutableArray<SyntaxTrivia> fileHeader)
             {
@@ -478,7 +480,7 @@ namespace StyleCop.Analyzers.OrderingRules
             {
                 if (this.fileHeader.Contains(trivia))
                 {
-                    return default(SyntaxTrivia);
+                    return default;
                 }
 
                 return base.VisitTrivia(trivia);

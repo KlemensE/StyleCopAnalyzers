@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.SpacingRules
 {
@@ -21,15 +21,16 @@ namespace StyleCop.Analyzers.SpacingRules
     /// <strong>fixed</strong>, <strong>for</strong>, <strong>foreach</strong>, <strong>from</strong>,
     /// <strong>group</strong>, <strong>if</strong>, <strong>in</strong>, <strong>into</strong>, <strong>join</strong>,
     /// <strong>let</strong>, <strong>lock</strong>, <strong>orderby</strong>, <strong>out</strong>,
-    /// <strong>ref</strong>, <strong>return</strong>, <strong>select</strong>, <strong>stackalloc</strong>,
-    /// <strong>switch</strong>, <strong>throw</strong>, <strong>using</strong>, <strong>var</strong>,
-    /// <strong>where</strong>, <strong>while</strong>, <strong>yield</strong>.</para>
+    /// <strong>ref</strong>, <strong>return</strong>, <strong>select</strong>, <strong>switch</strong>,
+    /// <strong>throw</strong>, <strong>using</strong>, <strong>var</strong>, <strong>where</strong>,
+    /// <strong>while</strong>, <strong>yield</strong>.</para>
     ///
     /// <para>The following keywords should not be followed by any space: <strong>checked</strong>,
     /// <strong>default</strong>, <strong>sizeof</strong>, <strong>typeof</strong>, <strong>unchecked</strong>.</para>
     ///
-    /// <para>The <strong>new</strong> keyword should always be followed by a space, unless it is used to create a new
-    /// array, in which case there should be no space between the new keyword and the opening array bracket.</para>
+    /// <para>The <strong>new</strong> and <strong>stackalloc</strong> keywords should always be followed by a space,
+    /// except where used to create a new implicitly-typed array, in which case there should be no space between the
+    /// keyword and the opening array bracket.</para>
     /// </remarks>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     internal class SA1000KeywordsMustBeSpacedCorrectly : DiagnosticAnalyzer
@@ -38,10 +39,10 @@ namespace StyleCop.Analyzers.SpacingRules
         /// The ID for diagnostics produced by the <see cref="SA1000KeywordsMustBeSpacedCorrectly"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1000";
-        private const string Title = "Keywords should be spaced correctly";
-        private const string MessageFormat = "The keyword '{0}' should{1} be followed by a space.";
-        private const string Description = "The spacing around a C# keyword is incorrect.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1000.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(SpacingResources.SA1000Title), SpacingResources.ResourceManager, typeof(SpacingResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(SpacingResources.SA1000MessageFormat), SpacingResources.ResourceManager, typeof(SpacingResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(SpacingResources.SA1000Description), SpacingResources.ResourceManager, typeof(SpacingResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.SpacingRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -102,7 +103,6 @@ namespace StyleCop.Analyzers.SpacingRules
                 case SyntaxKind.OutKeyword:
                 case SyntaxKind.RefKeyword:
                 case SyntaxKind.SelectKeyword:
-                case SyntaxKind.StackAllocKeyword:
                 case SyntaxKind.SwitchKeyword:
                 case SyntaxKind.UsingKeyword:
                 case SyntaxKind.WhereKeyword:
@@ -141,7 +141,8 @@ namespace StyleCop.Analyzers.SpacingRules
                     break;
 
                 case SyntaxKind.NewKeyword:
-                    HandleNewKeywordToken(ref context, token);
+                case SyntaxKind.StackAllocKeyword:
+                    HandleNewOrStackAllocKeywordToken(ref context, token);
                     break;
 
                 case SyntaxKind.ReturnKeyword:
@@ -161,8 +162,7 @@ namespace StyleCop.Analyzers.SpacingRules
         private static void HandleInvocationExpression(SyntaxNodeAnalysisContext context)
         {
             InvocationExpressionSyntax invocationExpressionSyntax = (InvocationExpressionSyntax)context.Node;
-            IdentifierNameSyntax identifierNameSyntax = invocationExpressionSyntax.Expression as IdentifierNameSyntax;
-            if (identifierNameSyntax == null)
+            if (!(invocationExpressionSyntax.Expression is IdentifierNameSyntax identifierNameSyntax))
             {
                 return;
             }
@@ -268,7 +268,7 @@ namespace StyleCop.Analyzers.SpacingRules
             reportDiagnostic(ref context, Diagnostic.Create(Descriptor, token.GetLocation(), TokenSpacingProperties.RemoveFollowing, token.Text, " not"));
         }
 
-        private static void HandleNewKeywordToken(ref SyntaxTreeAnalysisContext context, SyntaxToken token)
+        private static void HandleNewOrStackAllocKeywordToken(ref SyntaxTreeAnalysisContext context, SyntaxToken token)
         {
             if (token.IsMissing)
             {
@@ -280,7 +280,8 @@ namespace StyleCop.Analyzers.SpacingRules
             switch (nextToken.Kind())
             {
             case SyntaxKind.OpenBracketToken:
-                if (token.Parent.IsKind(SyntaxKind.ImplicitArrayCreationExpression))
+                if (token.Parent.IsKind(SyntaxKind.ImplicitArrayCreationExpression)
+                    || token.Parent.IsKind(SyntaxKindEx.ImplicitStackAllocArrayCreationExpression))
                 {
                     // This is handled by SA1026
                     return;

@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.MaintainabilityRules
 {
@@ -39,7 +39,7 @@ namespace StyleCop.Analyzers.MaintainabilityRules
     /// }
     /// </code>
     ///
-    /// <para>or</para>
+    /// <para>or:</para>
     ///
     /// <code language="csharp">
     /// if (x || (y &amp;&amp; z &amp;&amp; a) || b)
@@ -58,10 +58,10 @@ namespace StyleCop.Analyzers.MaintainabilityRules
         /// analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1408";
-        private const string Title = "Conditional expressions should declare precedence";
-        private const string MessageFormat = "Conditional expressions should declare precedence";
-        private const string Description = "A C# statement contains a complex conditional expression which omits parenthesis around operators.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1408.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(MaintainabilityResources.SA1408Title), MaintainabilityResources.ResourceManager, typeof(MaintainabilityResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(MaintainabilityResources.SA1408MessageFormat), MaintainabilityResources.ResourceManager, typeof(MaintainabilityResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(MaintainabilityResources.SA1408Description), MaintainabilityResources.ResourceManager, typeof(MaintainabilityResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.MaintainabilityRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -88,10 +88,9 @@ namespace StyleCop.Analyzers.MaintainabilityRules
         {
             BinaryExpressionSyntax binSyntax = (BinaryExpressionSyntax)context.Node;
 
-            if (binSyntax.Left is BinaryExpressionSyntax)
+            if (binSyntax.Left is BinaryExpressionSyntax left)
             {
                 // Check if the operations are of the same kind
-                var left = (BinaryExpressionSyntax)binSyntax.Left;
                 if (left.OperatorToken.IsKind(SyntaxKind.AmpersandAmpersandToken) || left.OperatorToken.IsKind(SyntaxKind.BarBarToken))
                 {
                     if (!IsSameFamily(binSyntax.OperatorToken, left.OperatorToken))
@@ -101,10 +100,9 @@ namespace StyleCop.Analyzers.MaintainabilityRules
                 }
             }
 
-            if (binSyntax.Right is BinaryExpressionSyntax)
+            if (binSyntax.Right is BinaryExpressionSyntax right)
             {
                 // Check if the operations are of the same kind
-                var right = (BinaryExpressionSyntax)binSyntax.Right;
                 if (right.OperatorToken.IsKind(SyntaxKind.AmpersandAmpersandToken) || right.OperatorToken.IsKind(SyntaxKind.BarBarToken))
                 {
                     if (!IsSameFamily(binSyntax.OperatorToken, right.OperatorToken))

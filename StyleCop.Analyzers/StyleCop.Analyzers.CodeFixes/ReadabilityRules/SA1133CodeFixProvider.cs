@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.ReadabilityRules
 {
@@ -9,19 +9,19 @@ namespace StyleCop.Analyzers.ReadabilityRules
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using StyleCop.Analyzers.Helpers;
 
     /// <summary>
     /// Implements a code fix for <see cref="SA1133DoNotCombineAttributes"/>.
     /// </summary>
     /// <remarks>
-    /// The SA1133 code fix adds the new lines to make sure that it doesn't immediately introduces a SA1134 after code fixing,
-    /// but it will not / should not attempt to fix any preexisting SA1134 cases.
+    /// <para>The SA1133 code fix adds the new lines to make sure that it doesn't immediately introduces a SA1134 after
+    /// code fixing, but it will not / should not attempt to fix any preexisting SA1134 cases.</para>
     /// </remarks>
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(SA1133CodeFixProvider))]
     [Shared]

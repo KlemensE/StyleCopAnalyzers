@@ -1,16 +1,16 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.MaintainabilityRules
 {
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Threading.Tasks;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using StyleCop.Analyzers.Helpers;
 
     internal sealed class SA1407SA1408FixAllProvider : DocumentBasedFixAllProvider
     {
@@ -37,15 +37,14 @@ namespace StyleCop.Analyzers.MaintainabilityRules
                 nodes.Add(node);
             }
 
-            return root.ReplaceNodes(nodes, (originalNode, rewrittenNode) => AddParentheses(originalNode, rewrittenNode));
+            return root.ReplaceNodes(nodes, (originalNode, rewrittenNode) => AddParentheses(rewrittenNode));
         }
 
-        private static SyntaxNode AddParentheses(SyntaxNode originalNode, SyntaxNode rewrittenNode)
+        private static SyntaxNode AddParentheses(SyntaxNode node)
         {
-            BinaryExpressionSyntax syntax = rewrittenNode as BinaryExpressionSyntax;
-            if (syntax == null)
+            if (!(node is BinaryExpressionSyntax syntax))
             {
-                return rewrittenNode;
+                return node;
             }
 
             BinaryExpressionSyntax trimmedSyntax = syntax.WithoutTrivia();

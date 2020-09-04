@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Helpers
 {
@@ -54,6 +54,30 @@ namespace StyleCop.Analyzers.Helpers
             }
 
             return firstInLine;
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the <paramref name="token"/> is an interpolated
+        /// unary expression.
+        /// </summary>
+        /// <param name="token">The token to process.</param>
+        /// <returns>
+        /// <see langword="true"/> if <paramref name="token"/> is an interpolated unary expression;
+        /// otherwise, <see langword="false"/>.
+        /// </returns>
+        internal static bool IsInterpolatedUnaryExpression(this SyntaxToken token)
+        {
+            SyntaxNode parentNode = (token.Parent.IsKind(SyntaxKind.UnaryMinusExpression)
+                    || token.Parent.IsKind(SyntaxKind.UnaryPlusExpression))
+                ? token.Parent.Parent
+                : token.Parent;
+
+            if (parentNode.IsKind(SyntaxKind.Interpolation))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>

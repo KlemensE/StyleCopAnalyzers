@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Settings
 {
@@ -63,7 +63,7 @@ namespace StyleCop.Analyzers.Settings
             var workspace = project.Solution.Workspace;
 
             // check if the settings file already exists
-            if (project.AdditionalDocuments.Any(IsStyleCopSettingsDocument))
+            if (project.AdditionalDocuments.Any(document => SettingsHelper.IsStyleCopSettingsFile(document.Name)))
             {
                 return SpecializedTasks.CompletedTask;
             }
@@ -79,7 +79,7 @@ namespace StyleCop.Analyzers.Settings
                 context.RegisterCodeFix(
                     CodeAction.Create(
                         SettingsResources.SettingsFileCodeFix,
-                        cancellationToken => GetTransformedSolutionAsync(context.Document, diagnostic, cancellationToken),
+                        cancellationToken => GetTransformedSolutionAsync(context.Document, cancellationToken),
                         nameof(SettingsFileCodeFixProvider)),
                     diagnostic);
             }
@@ -94,13 +94,11 @@ namespace StyleCop.Analyzers.Settings
             return null;
         }
 
-        private static bool IsStyleCopSettingsDocument(TextDocument document)
+        private static Task<Solution> GetTransformedSolutionAsync(Document document, CancellationToken cancellationToken)
         {
-            return string.Equals(document.Name, SettingsHelper.SettingsFileName, StringComparison.OrdinalIgnoreCase);
-        }
+            // Currently unused
+            _ = cancellationToken;
 
-        private static Task<Solution> GetTransformedSolutionAsync(Document document, Diagnostic diagnostic, CancellationToken cancellationToken)
-        {
             var project = document.Project;
             var solution = project.Solution;
 

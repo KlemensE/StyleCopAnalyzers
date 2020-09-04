@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace LightJson
 {
@@ -20,7 +20,7 @@ namespace LightJson
         /// <summary>
         /// Represents a null JsonValue.
         /// </summary>
-        public static readonly JsonValue Null = new JsonValue(JsonValueType.Null, default(double), null);
+        public static readonly JsonValue Null = new JsonValue(JsonValueType.Null, default, null);
 
         private readonly JsonValueType type;
         private readonly object reference;
@@ -74,7 +74,7 @@ namespace LightJson
         {
             if (value != null)
             {
-                this.value = default(double);
+                this.value = default;
 
                 this.type = JsonValueType.String;
 
@@ -94,7 +94,7 @@ namespace LightJson
         {
             if (value != null)
             {
-                this.value = default(double);
+                this.value = default;
 
                 this.type = JsonValueType.Object;
 
@@ -114,7 +114,7 @@ namespace LightJson
         {
             if (value != null)
             {
-                this.value = default(double);
+                this.value = default;
 
                 this.type = JsonValueType.Array;
 
@@ -269,21 +269,21 @@ namespace LightJson
             {
                 switch (this.Type)
                 {
-                    case JsonValueType.Boolean:
-                        return this.value == 1;
+                case JsonValueType.Boolean:
+                    return this.value == 1;
 
-                    case JsonValueType.Number:
-                        return this.value != 0;
+                case JsonValueType.Number:
+                    return this.value != 0;
 
-                    case JsonValueType.String:
-                        return (string)this.reference != string.Empty;
+                case JsonValueType.String:
+                    return (string)this.reference != string.Empty;
 
-                    case JsonValueType.Object:
-                    case JsonValueType.Array:
-                        return true;
+                case JsonValueType.Object:
+                case JsonValueType.Array:
+                    return true;
 
-                    default:
-                        return false;
+                default:
+                    return false;
                 }
             }
         }
@@ -323,27 +323,27 @@ namespace LightJson
             {
                 switch (this.Type)
                 {
-                    case JsonValueType.Boolean:
-                        return (this.value == 1)
-                            ? 1
-                            : 0;
+                case JsonValueType.Boolean:
+                    return (this.value == 1)
+                        ? 1
+                        : 0;
 
-                    case JsonValueType.Number:
-                        return this.value;
+                case JsonValueType.Number:
+                    return this.value;
 
-                    case JsonValueType.String:
-                        double number;
-                        if (double.TryParse((string)this.reference, NumberStyles.Float, CultureInfo.InvariantCulture, out number))
-                        {
-                            return number;
-                        }
-                        else
-                        {
-                            goto default;
-                        }
+                case JsonValueType.String:
+                    double number;
+                    if (double.TryParse((string)this.reference, NumberStyles.Float, CultureInfo.InvariantCulture, out number))
+                    {
+                        return number;
+                    }
+                    else
+                    {
+                        goto default;
+                    }
 
-                    default:
-                        return 0;
+                default:
+                    return 0;
                 }
             }
         }
@@ -358,19 +358,19 @@ namespace LightJson
             {
                 switch (this.Type)
                 {
-                    case JsonValueType.Boolean:
-                        return (this.value == 1)
-                            ? "true"
-                            : "false";
+                case JsonValueType.Boolean:
+                    return (this.value == 1)
+                        ? "true"
+                        : "false";
 
-                    case JsonValueType.Number:
-                        return this.value.ToString(CultureInfo.InvariantCulture);
+                case JsonValueType.Number:
+                    return this.value.ToString(CultureInfo.InvariantCulture);
 
-                    case JsonValueType.String:
-                        return (string)this.reference;
+                case JsonValueType.String:
+                    return (string)this.reference;
 
-                    default:
-                        return null;
+                default:
+                    return null;
                 }
             }
         }
@@ -434,17 +434,17 @@ namespace LightJson
             {
                 switch (this.Type)
                 {
-                    case JsonValueType.Boolean:
-                    case JsonValueType.Number:
-                        return this.value;
+                case JsonValueType.Boolean:
+                case JsonValueType.Number:
+                    return this.value;
 
-                    case JsonValueType.String:
-                    case JsonValueType.Object:
-                    case JsonValueType.Array:
-                        return this.reference;
+                case JsonValueType.String:
+                case JsonValueType.Object:
+                case JsonValueType.Array:
+                    return this.reference;
 
-                    default:
-                        return null;
+                default:
+                    return null;
                 }
             }
         }
@@ -487,8 +487,8 @@ namespace LightJson
         /// Gets or sets the value at the specified index.
         /// </summary>
         /// <param name="index">The zero-based index of the value to get or set.</param>
-        /// <exception cref="System.InvalidOperationException">
-        /// Thrown when this JsonValue is not a JsonArray
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when this <see cref="JsonValue"/> is not a <see cref="JsonArray"/>.
         /// </exception>
         public JsonValue this[int index]
         {
@@ -566,8 +566,8 @@ namespace LightJson
         /// Converts the given DateTime? into a JsonValue.
         /// </summary>
         /// <remarks>
-        /// The DateTime value will be stored as a string using ISO 8601 format,
-        /// since JSON does not define a DateTime type.
+        /// <para>The DateTime value will be stored as a string using ISO 8601 format,
+        /// since JSON does not define a DateTime type.</para>
         /// </remarks>
         /// <param name="value">The value to be converted.</param>
         public static implicit operator JsonValue(DateTime? value)
@@ -604,7 +604,9 @@ namespace LightJson
         /// Throws System.InvalidCastException when the inner value type of the
         /// JsonValue is not the desired type of the conversion.
         /// </exception>
+#pragma warning disable IDE0055 // Fix formatting
         public static explicit operator int?(JsonValue jsonValue)
+#pragma warning restore IDE0055 // Fix formatting
         {
             if (jsonValue.IsNull)
             {
@@ -640,7 +642,9 @@ namespace LightJson
         /// Throws System.InvalidCastException when the inner value type of the
         /// JsonValue is not the desired type of the conversion.
         /// </exception>
+#pragma warning disable IDE0055 // Fix formatting
         public static explicit operator bool?(JsonValue jsonValue)
+#pragma warning restore IDE0055 // Fix formatting
         {
             if (jsonValue.IsNull)
             {
@@ -676,7 +680,9 @@ namespace LightJson
         /// Throws System.InvalidCastException when the inner value type of the
         /// JsonValue is not the desired type of the conversion.
         /// </exception>
+#pragma warning disable IDE0055 // Fix formatting
         public static explicit operator double?(JsonValue jsonValue)
+#pragma warning restore IDE0055 // Fix formatting
         {
             if (jsonValue.IsNull)
             {
@@ -758,7 +764,9 @@ namespace LightJson
         /// Converts the given JsonValue into a nullable DateTime.
         /// </summary>
         /// <param name="jsonValue">The JsonValue to be converted.</param>
+#pragma warning disable IDE0055 // Fix formatting
         public static explicit operator DateTime?(JsonValue jsonValue)
+#pragma warning restore IDE0055 // Fix formatting
         {
             if (jsonValue.IsDateTime || jsonValue.IsNull)
             {
@@ -839,7 +847,7 @@ namespace LightJson
         [ExcludeFromCodeCoverage]
         private class JsonValueDebugView
         {
-            private JsonValue jsonValue;
+            private readonly JsonValue jsonValue;
 
             public JsonValueDebugView(JsonValue jsonValue)
             {

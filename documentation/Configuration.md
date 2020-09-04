@@ -12,11 +12,13 @@ StyleCop Analyzers is configured using two separate mechanisms: code analysis ru
    * Specify project-specific text, such as the name of the company and the structure to use for copyright headers
    * Fine-tune the behavior of certain rules
 
-Code analysis rule sets are the standard way to configure most diagnostic analyzers within Visual Studio 2015. Information about creating and customizing these files can be found in the [Using Rule Sets to Group Code Analysis Rules](https://msdn.microsoft.com/en-us/library/dd264996.aspx) documentation on MSDN.
+Code analysis rule sets are the standard way to configure most diagnostic analyzers within Visual Studio. Information about creating and customizing these files can be found in the [Using Rule Sets to Group Code Analysis Rules](https://docs.microsoft.com/visualstudio/code-quality/using-rule-sets-to-group-code-analysis-rules) documentation on docs.microsoft.com.
 
 ## Getting Started with **stylecop.json**
 
 The easiest way to add a **stylecop.json** configuration file to a new project is using a code fix provided by the project. To invoke the code fix, open any file where SA1633 is reported¹ and press Ctrl+. to bring up the Quick Fix menu. From the menu, select **Add StyleCop settings file to the project**.
+
+The dot file naming convention is also supported, which makes it possible to name the configuration file **.stylecop.json**.
 
 ### JSON Schema for IntelliSense
 
@@ -68,7 +70,7 @@ The following properties are used to configure basic indentation in StyleCop Ana
 > :bulb: When working in Visual Studio, the IDE will not automatically adjust editor settings according to the values in
 > **stylecop.json**. To provide this functionality as well, we recommend duplicating the basic indentation settings in a
 > [**.editorconfig**](http://editorconfig.org/) file. Users of the [EditorConfig](https://visualstudiogallery.msdn.microsoft.com/c8bccfe2-650c-4b42-bc5c-845e21f96328)
-> extension for Visual Studio will no need to update their C# indentation settings in order to match your project style.
+> extension for Visual Studio will not need to update their C# indentation settings in order to match your project style.
 
 ## Spacing Rules
 
@@ -98,7 +100,21 @@ This section describes the features of readability rules which can be configured
 }
 ```
 
-> Currently there are no configurable settings for readability rules.
+### Aliases for Built-In Types
+
+| Property | Default Value | Minimum Version | Summary |
+| --- | --- | --- | --- |
+| `allowBuiltInTypeAliases` | **false** | 1.1.0-beta007 | Specifies whether aliases are allowed for built-in types. |
+
+By default, SA1121 reports a diagnostic for the use of named aliases for built-in types:
+
+```csharp
+using HRESULT = System.Int32;
+
+HRESULT hr = SomeNativeOperation(); // SA1121
+```
+
+The `allowBuiltInTypeAliases` configuration property can be set to `true` to allow cases like this while continuing to report diagnostics for direct references to the metadata type name, `Int32`.
 
 ## Ordering Rules
 
@@ -298,6 +314,64 @@ The following example shows a settings file which allows the common prefixes as 
 }
 ```
 
+### Namespace Components
+
+The following property is used to configure allowable namespace components (e.g. ones that start with a lowercase letter).
+
+| Property | Default Value | Minimum Version | Summary |
+| --- | --- | --- | --- |
+| `allowedNamespaceComponents` | `[ ]` | 1.2.0 | Specifies namespace components that are allowed to be used. See the example below for more information. |
+
+The following example shows a settings file which allows namespace components such as `eBay` or `Apple.iPod`.
+
+```json
+{
+  "settings": {
+    "namingRules": {
+      "allowedNamespaceComponents": [
+        "eBay",
+        "iPod"
+      ]
+    }
+  }
+}
+```
+
+
+### Tuple element names
+
+The following properties are used to configure the behavior of the tuple element name analyzers.
+
+| Property | Default Value | Minimum Version | Summary |
+| --- | --- | --- | --- |
+| `includeInferredTupleElementNames` | false | 1.2.0 | Specifies whether inferred tuple element names will be analyzed as well. |
+| `tupleElementNameCasing` | "PascalCase" | 1.2.0 | Specifies the casing convention used for tuple element names. |
+
+The following example shows a settings file which requires tuple element names to use camel case for all tuple elements (including inferred element names).
+
+```json
+{
+  "settings": {
+    "namingRules": {
+      "includeInferredTupleElementNames": true,
+      "tupleElementNameCasing" : "camelCase"
+    }
+  }
+}
+```
+
+#### Tuple Element Name Casing
+The `tupleElementNameCasing` property affects the behavior of the [SA1316 Tuple element names should use correct casing](SA1316.md) analyzer.
+
+This property has two allowed values, which are described as follows.
+
+##### `"camelCase"`
+In this mode, tuple element names must start with a lowercase letter.
+
+##### `"PascalCase"`
+In this mode, tuple element names must start with an uppercase letter.
+
+
 ## Maintainability Rules
 
 This section describes the features of maintainability rules which can be configured in **stylecop.json**. Each of the described properties are configured in the `maintainabilityRules` object, which is shown in the following sample file.
@@ -388,7 +462,7 @@ The following properties are used to configure copyright headers in StyleCop Ana
 | `copyrightText` | `"Copyright (c) {companyName}. All rights reserved."` | 1.0.0 | Specifies the default copyright text which should appear in copyright headers |
 | `xmlHeader` | **true** | 1.0.0 | Specifies whether file headers should use standard StyleCop XML format, where the copyright notice is wrapped in a `<copyright>` element |
 | `variables` | n/a | 1.0.0 | Specifies replacement variables which can be referenced in the `copyrightText` value |
-| `headerDecoration` | n/a | 1.1.0 | This value can be set to add a decoration for the header comment so headers look similar to the ones generated by the StyleCop Classic ReSharper fix | 
+| `headerDecoration` | n/a | 1.1.0 | This value can be set to add a decoration for the header comment so headers look similar to the ones generated by the StyleCop Classic ReSharper fix |
 
 #### Configuring Copyright Text
 
@@ -573,3 +647,56 @@ File naming convention | Expected file name
 -----------------------| ------------------
 stylecop               | Class1{T1,T2,T3}.cs
 metadata               | Class1`3.cs
+
+### Text ending with a period
+
+The [SA1629 Documentation Text Must End With A Period](SA1629.md) analyzer checks if sections within XML documentation end with a period. The following properties can be used to control the behavior of the analyzer:
+
+| Property | Default Value | Minimum Version | Summary |
+| --- | --- | --- | --- |
+| `excludeFromPunctuationCheck` | `[ "seealso" ]` |  1.1.0 | Specifies the top-level tags within XML documentation that will be excluded from analysis. |
+
+## Sharing configuration among solutions
+
+It is possible to define your preferred configuration once and reuse it across multiple independent projects. This involves rolling out your own NuGet package,
+which will contain the `stylecop.json` configuration and potentially a custom ruleset file. A custom `.props` file glues that configuration to any project
+that will use the NuGet package.
+
+Example `.nuspec` file:
+
+```xml
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>acme.stylecop</id>
+    <version>1.0.0</version>
+    <dependencies>
+      <dependency id="StyleCop.Analyzers" version="1.0.2" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="stylecop.json" target="" />
+    <file src="acme.stylecop.ruleset" target="" />
+    <file src="acme.stylecop.props" target="build" />
+  </files>
+</package>
+```
+
+Example `.props` file:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <CodeAnalysisRuleSetLocation Condition=" '$(NuGetPackageRoot)' != '' ">$(NuGetPackageRoot)\acme.stylecop\1.0.0</CodeAnalysisRuleSetLocation>
+    <CodeAnalysisRuleSetLocation Condition=" '$(CodeAnalysisRuleSetLocation)' == '' and '$(SolutionDir)' != '' ">$(SolutionDir)\packages\acme.stylecop.1.0.0</CodeAnalysisRuleSetLocation>
+    <CodeAnalysisRuleSetLocation Condition=" '$(CodeAnalysisRuleSetLocation)' == '' ">$([System.IO.Path]::GetDirectoryName($(MSBuildProjectDirectory)))\packages\acme.stylecop.1.0.0</CodeAnalysisRuleSetLocation>
+  </PropertyGroup>
+  <PropertyGroup>
+      <CodeAnalysisRuleSet>$(CodeAnalysisRuleSetLocation)\acme.stylecop.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="$(CodeAnalysisRuleSetLocation)\stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+</Project>
+```

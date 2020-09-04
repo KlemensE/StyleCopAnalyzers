@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.SpacingRules
 {
@@ -34,19 +34,30 @@ namespace StyleCop.Analyzers.SpacingRules
         /// The ID for diagnostics produced by the <see cref="SA1009ClosingParenthesisMustBeSpacedCorrectly"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1009";
-        private const string Title = "Closing parenthesis should be spaced correctly";
-        private const string MessageFormat = "Closing parenthesis should{0} be {1} by a space.";
-        private const string Description = "A closing parenthesis within a C# statement is not spaced correctly.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1009.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(SpacingResources.SA1009Title), SpacingResources.ResourceManager, typeof(SpacingResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(SpacingResources.SA1009Description), SpacingResources.ResourceManager, typeof(SpacingResources));
 
-        private static readonly DiagnosticDescriptor Descriptor =
-            new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.SpacingRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
+        private static readonly LocalizableString MessageNotPreceded = new LocalizableResourceString(nameof(SpacingResources.SA1009MessageNotPreceded), SpacingResources.ResourceManager, typeof(SpacingResources));
+        private static readonly LocalizableString MessageNotFollowed = new LocalizableResourceString(nameof(SpacingResources.SA1009MessageNotFollowed), SpacingResources.ResourceManager, typeof(SpacingResources));
+        private static readonly LocalizableString MessageFollowed = new LocalizableResourceString(nameof(SpacingResources.SA1009MessageFollowed), SpacingResources.ResourceManager, typeof(SpacingResources));
 
         private static readonly Action<SyntaxTreeAnalysisContext> SyntaxTreeAction = HandleSyntaxTree;
 
+#pragma warning disable SA1202 // Elements should be ordered by access
+        internal static readonly DiagnosticDescriptor DescriptorNotPreceded =
+            new DiagnosticDescriptor(DiagnosticId, Title, MessageNotPreceded, AnalyzerCategory.SpacingRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
+
+        internal static readonly DiagnosticDescriptor DescriptorNotFollowed =
+            new DiagnosticDescriptor(DiagnosticId, Title, MessageNotFollowed, AnalyzerCategory.SpacingRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
+
+        internal static readonly DiagnosticDescriptor DescriptorFollowed =
+            new DiagnosticDescriptor(DiagnosticId, Title, MessageFollowed, AnalyzerCategory.SpacingRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
+#pragma warning restore SA1202 // Elements should be ordered by access
+
         /// <inheritdoc/>
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-            ImmutableArray.Create(Descriptor);
+            ImmutableArray.Create(DescriptorNotPreceded);
 
         /// <inheritdoc/>
         public override void Initialize(AnalysisContext context)
@@ -105,6 +116,7 @@ namespace StyleCop.Analyzers.SpacingRules
             case SyntaxKind.SemicolonToken:
             case SyntaxKind.CommaToken:
             case SyntaxKind.DoubleQuoteToken:
+            case SyntaxKindEx.DotDotToken:
                 precedesStickyCharacter = true;
                 break;
 
@@ -173,6 +185,10 @@ namespace StyleCop.Analyzers.SpacingRules
                 precedesStickyCharacter = nextToken.Parent is InterpolationSyntax;
                 break;
 
+            case SyntaxKind.ExclamationToken when nextToken.Parent.IsKind(SyntaxKindEx.SuppressNullableWarningExpression):
+                precedesStickyCharacter = true;
+                break;
+
             default:
                 precedesStickyCharacter = false;
                 break;
@@ -219,7 +235,7 @@ namespace StyleCop.Analyzers.SpacingRules
                         : TokenSpacingProperties.RemoveImmediatePreceding;
                 }
 
-                context.ReportDiagnostic(Diagnostic.Create(Descriptor, token.GetLocation(), properties, " not", "preceded"));
+                context.ReportDiagnostic(Diagnostic.Create(DescriptorNotPreceded, token.GetLocation(), properties));
             }
 
             if (!suppressFollowingSpaceError)
@@ -228,13 +244,17 @@ namespace StyleCop.Analyzers.SpacingRules
                 {
                     // Closing parenthesis should{} be {followed} by a space.
                     var properties = TokenSpacingProperties.InsertFollowing;
-                    context.ReportDiagnostic(Diagnostic.Create(Descriptor, token.GetLocation(), properties, string.Empty, "followed"));
+#pragma warning disable RS1005 // ReportDiagnostic invoked with an unsupported DiagnosticDescriptor (https://github.com/dotnet/roslyn-analyzers/issues/4103)
+                    context.ReportDiagnostic(Diagnostic.Create(DescriptorFollowed, token.GetLocation(), properties));
+#pragma warning restore RS1005 // ReportDiagnostic invoked with an unsupported DiagnosticDescriptor
                 }
                 else if (precedesStickyCharacter && followedBySpace && (!lastInLine || !allowEndOfLine))
                 {
                     // Closing parenthesis should{ not} be {followed} by a space.
                     var properties = TokenSpacingProperties.RemoveFollowing;
-                    context.ReportDiagnostic(Diagnostic.Create(Descriptor, token.GetLocation(), properties, " not", "followed"));
+#pragma warning disable RS1005 // ReportDiagnostic invoked with an unsupported DiagnosticDescriptor (https://github.com/dotnet/roslyn-analyzers/issues/4103)
+                    context.ReportDiagnostic(Diagnostic.Create(DescriptorNotFollowed, token.GetLocation(), properties));
+#pragma warning restore RS1005 // ReportDiagnostic invoked with an unsupported DiagnosticDescriptor
                 }
             }
         }

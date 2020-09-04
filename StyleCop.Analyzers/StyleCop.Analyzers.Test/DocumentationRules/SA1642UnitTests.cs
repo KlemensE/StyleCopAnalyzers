@@ -1,24 +1,23 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.DocumentationRules
 {
-    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CodeFixes;
-    using Microsoft.CodeAnalysis.Diagnostics;
+    using Microsoft.CodeAnalysis.Testing;
     using StyleCop.Analyzers.DocumentationRules;
     using StyleCop.Analyzers.Test.Helpers;
+    using StyleCop.Analyzers.Test.Verifiers;
     using TestHelper;
     using Xunit;
+    using static StyleCop.Analyzers.Test.Verifiers.CustomDiagnosticVerifier<StyleCop.Analyzers.DocumentationRules.SA1642ConstructorSummaryDocumentationMustBeginWithStandardText>;
 
     /// <summary>
-    /// This class contains unit tests for <see cref="SA1642ConstructorSummaryDocumentationMustBeginWithStandardText"/>-
+    /// This class contains unit tests for <see cref="SA1642ConstructorSummaryDocumentationMustBeginWithStandardText"/>.
     /// </summary>
     [UseCulture("en-US")]
-    public class SA1642UnitTests : CodeFixVerifier
+    public class SA1642UnitTests
     {
         [Theory]
         [InlineData("class")]
@@ -34,7 +33,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         }}
     }}
 }}";
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         [Theory]
@@ -42,7 +41,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestEmptyPublicConstructorAsync(string typeKind)
         {
-            await this.TestEmptyConstructorAsync(typeKind, "public").ConfigureAwait(false);
+            await TestEmptyConstructorAsync(typeKind, "public").ConfigureAwait(false);
         }
 
         [Theory]
@@ -50,7 +49,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestEmptyNonPublicConstructorAsync(string typeKind)
         {
-            await this.TestEmptyConstructorAsync(typeKind, "private").ConfigureAwait(false);
+            await TestEmptyConstructorAsync(typeKind, "private").ConfigureAwait(false);
         }
 
         [Theory]
@@ -58,7 +57,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestEmptyStaticConstructorAsync(string typeKind)
         {
-            await this.TestEmptyConstructorAsync(typeKind, "static").ConfigureAwait(false);
+            await TestEmptyConstructorAsync(typeKind, "static").ConfigureAwait(false);
         }
 
         [Theory]
@@ -66,7 +65,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestNonPrivateConstructorCorrectDocumentationSimpleAsync(string typeKind)
         {
-            await this.TestConstructorCorrectDocumentationSimpleAsync(
+            await TestConstructorCorrectDocumentationSimpleAsync(
                 typeKind,
                 "public",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -79,7 +78,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestNonPrivateConstructorCorrectDocumentationCustomizedAsync(string typeKind)
         {
-            await this.TestConstructorCorrectDocumentationCustomizedAsync(
+            await TestConstructorCorrectDocumentationCustomizedAsync(
                 typeKind,
                 "public",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -92,7 +91,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestNonPrivateConstructorCorrectDocumentationGenericSimpleAsync(string typeKind)
         {
-            await this.TestConstructorCorrectDocumentationSimpleAsync(
+            await TestConstructorCorrectDocumentationSimpleAsync(
                 typeKind,
                 "public",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -105,7 +104,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestNonPrivateConstructorCorrectDocumentationGenericCustomizedAsync(string typeKind)
         {
-            await this.TestConstructorCorrectDocumentationCustomizedAsync(
+            await TestConstructorCorrectDocumentationCustomizedAsync(
                 typeKind,
                 "public",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -118,7 +117,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestPrivateConstructorCorrectDocumentationAsync(string typeKind)
         {
-            await this.TestConstructorCorrectDocumentationAsync(
+            await TestConstructorCorrectDocumentationAsync(
                 typeKind,
                 "private",
                 string.Format(DocumentationResources.PrivateConstructorStandardTextFirstPart, typeKind),
@@ -132,7 +131,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestPrivateConstructorCorrectExtendedDocumentationAsync(string typeKind)
         {
-            await this.TestConstructorCorrectDocumentationAsync(
+            await TestConstructorCorrectDocumentationAsync(
                 typeKind,
                 "private",
                 string.Format(DocumentationResources.PrivateConstructorStandardTextFirstPart, typeKind),
@@ -146,7 +145,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestPrivateConstructorCorrectDocumentation_NonPrivateSimpleAsync(string typeKind)
         {
-            await this.TestConstructorCorrectDocumentationSimpleAsync(
+            await TestConstructorCorrectDocumentationSimpleAsync(
                 typeKind,
                 "private",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -159,7 +158,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestPrivateConstructorCorrectDocumentation_NonPrivateCustomizedAsync(string typeKind)
         {
-            await this.TestConstructorCorrectDocumentationCustomizedAsync(
+            await TestConstructorCorrectDocumentationCustomizedAsync(
                 typeKind,
                 "private",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -172,7 +171,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestPrivateConstructorCorrectDocumentationGenericAsync(string typeKind)
         {
-            await this.TestConstructorCorrectDocumentationAsync(
+            await TestConstructorCorrectDocumentationAsync(
                 typeKind,
                 "private",
                 string.Format(DocumentationResources.PrivateConstructorStandardTextFirstPart, typeKind),
@@ -186,7 +185,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestPrivateConstructorCorrectExtendedDocumentationGenericAsync(string typeKind)
         {
-            await this.TestConstructorCorrectDocumentationAsync(
+            await TestConstructorCorrectDocumentationAsync(
                 typeKind,
                 "private",
                 string.Format(DocumentationResources.PrivateConstructorStandardTextFirstPart, typeKind),
@@ -200,7 +199,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestPrivateConstructorCorrectDocumentationGeneric_NonPrivateSimpleAsync(string typeKind)
         {
-            await this.TestConstructorCorrectDocumentationSimpleAsync(
+            await TestConstructorCorrectDocumentationSimpleAsync(
                 typeKind,
                 "private",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -213,7 +212,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestPrivateConstructorCorrectDocumentationGeneric_NonPrivateCustomizedAsync(string typeKind)
         {
-            await this.TestConstructorCorrectDocumentationCustomizedAsync(
+            await TestConstructorCorrectDocumentationCustomizedAsync(
                 typeKind,
                 "private",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -226,7 +225,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestStaticConstructorCorrectDocumentationAsync(string typeKind)
         {
-            await this.TestConstructorCorrectDocumentationAsync(
+            await TestConstructorCorrectDocumentationAsync(
                 typeKind,
                 "static",
                 string.Format(DocumentationResources.StaticConstructorStandardTextFirstPart, typeKind),
@@ -240,7 +239,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestStaticConstructorCorrectDocumentationGenericAsync(string typeKind)
         {
-            await this.TestConstructorCorrectDocumentationAsync(
+            await TestConstructorCorrectDocumentationAsync(
                 typeKind,
                 "static",
                 string.Format(DocumentationResources.StaticConstructorStandardTextFirstPart, typeKind),
@@ -254,7 +253,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestNonPrivateConstructorMissingDocumentationAsync(string typeKind)
         {
-            await this.TestConstructorMissingDocumentationAsync(
+            await TestConstructorMissingDocumentationAsync(
                 typeKind,
                 "public",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -267,7 +266,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestNonPrivateConstructorMissingDocumentationGenericAsync(string typeKind)
         {
-            await this.TestConstructorMissingDocumentationAsync(
+            await TestConstructorMissingDocumentationAsync(
                 typeKind,
                 "public",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -280,7 +279,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestPrivateConstructorMissingDocumentationAsync(string typeKind)
         {
-            await this.TestConstructorMissingDocumentationAsync(
+            await TestConstructorMissingDocumentationAsync(
                 typeKind,
                 "private",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -293,7 +292,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestPrivateConstructorMissingDocumentationGenericAsync(string typeKind)
         {
-            await this.TestConstructorMissingDocumentationAsync(
+            await TestConstructorMissingDocumentationAsync(
                 typeKind,
                 "private",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -306,7 +305,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestStaticConstructorMissingDocumentationAsync(string typeKind)
         {
-            await this.TestConstructorMissingDocumentationAsync(
+            await TestConstructorMissingDocumentationAsync(
                 typeKind,
                 "static",
                 string.Format(DocumentationResources.StaticConstructorStandardTextFirstPart, typeKind),
@@ -319,7 +318,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestStaticConstructorMissingDocumentationGenericAsync(string typeKind)
         {
-            await this.TestConstructorMissingDocumentationAsync(
+            await TestConstructorMissingDocumentationAsync(
                 typeKind,
                 "static",
                 string.Format(DocumentationResources.StaticConstructorStandardTextFirstPart, typeKind),
@@ -332,7 +331,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestNonPrivateConstructorSimpleDocumentationAsync(string typeKind)
         {
-            await this.TestConstructorSimpleDocumentationAsync(
+            await TestConstructorSimpleDocumentationAsync(
                 typeKind,
                 "public",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -345,7 +344,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestNonPrivateConstructorSimpleDocumentationGenericAsync(string typeKind)
         {
-            await this.TestConstructorSimpleDocumentationAsync(
+            await TestConstructorSimpleDocumentationAsync(
                 typeKind,
                 "public",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -358,7 +357,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestPrivateConstructorSimpleDocumentationAsync(string typeKind)
         {
-            await this.TestConstructorSimpleDocumentationAsync(
+            await TestConstructorSimpleDocumentationAsync(
                 typeKind,
                 "private",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -371,7 +370,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestPrivateConstructorSimpleDocumentationGenericAsync(string typeKind)
         {
-            await this.TestConstructorSimpleDocumentationAsync(
+            await TestConstructorSimpleDocumentationAsync(
                 typeKind,
                 "private",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -384,7 +383,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestStaticConstructorSimpleDocumentationAsync(string typeKind)
         {
-            await this.TestConstructorSimpleDocumentationAsync(
+            await TestConstructorSimpleDocumentationAsync(
                 typeKind,
                 "static",
                 string.Format(DocumentationResources.StaticConstructorStandardTextFirstPart, typeKind),
@@ -397,7 +396,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestStaticConstructorSimpleDocumentationGenericAsync(string typeKind)
         {
-            await this.TestConstructorSimpleDocumentationAsync(
+            await TestConstructorSimpleDocumentationAsync(
                 typeKind,
                 "static",
                 string.Format(DocumentationResources.StaticConstructorStandardTextFirstPart, typeKind),
@@ -410,7 +409,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestNonPrivateConstructorSimpleDocumentationWrongTypeNameAsync(string typeKind)
         {
-            await this.TestConstructorSimpleDocumentationWrongTypeNameAsync(
+            await TestConstructorSimpleDocumentationWrongTypeNameAsync(
                 typeKind,
                 "public",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -423,7 +422,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestNonPrivateConstructorSimpleDocumentationGenericWrongTypeNameAsync(string typeKind)
         {
-            await this.TestConstructorSimpleDocumentationWrongTypeNameAsync(
+            await TestConstructorSimpleDocumentationWrongTypeNameAsync(
                 typeKind,
                 "public",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -436,7 +435,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestPrivateConstructorSimpleDocumentationWrongTypeNameAsync(string typeKind)
         {
-            await this.TestConstructorSimpleDocumentationWrongTypeNameAsync(
+            await TestConstructorSimpleDocumentationWrongTypeNameAsync(
                 typeKind,
                 "private",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -449,7 +448,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestPrivateConstructorSimpleDocumentationGenericWrongTypeNameAsync(string typeKind)
         {
-            await this.TestConstructorSimpleDocumentationWrongTypeNameAsync(
+            await TestConstructorSimpleDocumentationWrongTypeNameAsync(
                 typeKind,
                 "private",
                 string.Format(DocumentationResources.NonPrivateConstructorStandardTextFirstPart, typeKind),
@@ -462,7 +461,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestStaticConstructorSimpleDocumentationWrongTypeNameAsync(string typeKind)
         {
-            await this.TestConstructorSimpleDocumentationWrongTypeNameAsync(
+            await TestConstructorSimpleDocumentationWrongTypeNameAsync(
                 typeKind,
                 "static",
                 string.Format(DocumentationResources.StaticConstructorStandardTextFirstPart, typeKind),
@@ -475,7 +474,7 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         [InlineData("struct")]
         public async Task TestStaticConstructorSimpleDocumentationGenericWrongTypeNameAsync(string typeKind)
         {
-            await this.TestConstructorSimpleDocumentationWrongTypeNameAsync(
+            await TestConstructorSimpleDocumentationWrongTypeNameAsync(
                 typeKind,
                 "static",
                 string.Format(DocumentationResources.StaticConstructorStandardTextFirstPart, typeKind),
@@ -484,12 +483,11 @@ namespace StyleCop.Analyzers.Test.DocumentationRules
         }
 
         /// <summary>
-        /// This is a regression test for DotNetAnalyzers/StyleCopAnalyzers#676 "SA1642 misfires on nested structs,
-        /// requiring text describing the outer type"
-        /// https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/676
+        /// This is a regression test for "SA1642 misfires on nested structs, requiring text describing the outer type".
         /// </summary>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
+        [WorkItem(676, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/676")]
         public async Task TestStructNestedInClassAsync()
         {
             string testCode = @"
@@ -520,10 +518,8 @@ class ClassName
 }
 ";
 
-            DiagnosticResult expected = this.CSharpDiagnostic().WithLocation(6, 13);
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpFixAsync(testCode, fixedCode, cancellationToken: CancellationToken.None).ConfigureAwait(false);
+            DiagnosticResult expected = Diagnostic().WithLocation(6, 13);
+            await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         [Theory]
@@ -548,7 +544,7 @@ class ClassName
 }}
 ";
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -586,10 +582,8 @@ internal abstract class CustomizableBlockSubscriberBase<TSource, TTarget, TSubsc
 }
 ";
 
-            DiagnosticResult expected = this.CSharpDiagnostic().WithLocation(7, 43);
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpFixAsync(testCode, fixedCode, cancellationToken: CancellationToken.None).ConfigureAwait(false);
+            DiagnosticResult expected = Diagnostic().WithLocation(7, 43);
+            await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -622,10 +616,8 @@ public class TestClass
 }
 ";
 
-            DiagnosticResult expected = this.CSharpDiagnostic().WithLocation(5, 43);
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpFixAsync(testCode, fixedCode, cancellationToken: CancellationToken.None).ConfigureAwait(false);
+            DiagnosticResult expected = Diagnostic().WithLocation(5, 43);
+            await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -659,12 +651,9 @@ public class TestClass
 }
 ";
 
-            //// TODO: The codefix produces a wrong result for this scenario but its not easily fixed.
-
-            DiagnosticResult expected = this.CSharpDiagnostic().WithLocation(4, 9);
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            ////await this.VerifyCSharpDiagnosticAsync(fixedCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpFixAsync(testCode, fixedCode, cancellationToken: CancellationToken.None).ConfigureAwait(false);
+            // TODO: The codefix produces a wrong result for this scenario but its not easily fixed.
+            DiagnosticResult expected = Diagnostic().WithLocation(4, 9);
+            await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -682,7 +671,7 @@ public class TestClass
 }
 ";
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -700,7 +689,7 @@ public class TestClass
 }
 ";
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -718,11 +707,8 @@ public class TestClass
 }
 ";
 
-            var expected = this.CSharpDiagnostic().WithLocation(4, 9);
-
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            var offeredFixes = await this.GetOfferedCSharpFixesAsync(testCode).ConfigureAwait(false);
-            Assert.Empty(offeredFixes);
+            var expected = Diagnostic().WithLocation(4, 9);
+            await VerifyCSharpFixAsync(testCode, expected, testCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -740,11 +726,8 @@ public class TestClass
 }
 ";
 
-            var expected = this.CSharpDiagnostic().WithLocation(4, 9);
-
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            var offeredFixes = await this.GetOfferedCSharpFixesAsync(testCode).ConfigureAwait(false);
-            Assert.Empty(offeredFixes);
+            var expected = Diagnostic().WithLocation(4, 9);
+            await VerifyCSharpFixAsync(testCode, expected, testCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -764,11 +747,8 @@ public class TestClass
 public class WrongClass { }
 ";
 
-            var expected = this.CSharpDiagnostic().WithLocation(4, 9);
-
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            var offeredFixes = await this.GetOfferedCSharpFixesAsync(testCode).ConfigureAwait(false);
-            Assert.Empty(offeredFixes);
+            var expected = Diagnostic().WithLocation(4, 9);
+            await VerifyCSharpFixAsync(testCode, expected, testCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -788,11 +768,8 @@ public class TestClass
 namespace WrongClass { }
 ";
 
-            var expected = this.CSharpDiagnostic().WithLocation(4, 9);
-
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            var offeredFixes = await this.GetOfferedCSharpFixesAsync(testCode).ConfigureAwait(false);
-            Assert.Empty(offeredFixes);
+            var expected = Diagnostic().WithLocation(4, 9);
+            await VerifyCSharpFixAsync(testCode, expected, testCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -810,11 +787,8 @@ public class TestClass
 }
 ";
 
-            var expected = this.CSharpDiagnostic().WithLocation(4, 9);
-
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            var offeredFixes = await this.GetOfferedCSharpFixesAsync(testCode).ConfigureAwait(false);
-            Assert.Empty(offeredFixes);
+            var expected = Diagnostic().WithLocation(4, 9);
+            await VerifyCSharpFixAsync(testCode, expected, testCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -832,11 +806,8 @@ public class TestClass
 }
 ";
 
-            var expected = this.CSharpDiagnostic().WithLocation(4, 9);
-
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            var offeredFixes = await this.GetOfferedCSharpFixesAsync(testCode).ConfigureAwait(false);
-            Assert.Empty(offeredFixes);
+            var expected = Diagnostic().WithLocation(4, 9);
+            await VerifyCSharpFixAsync(testCode, expected, testCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -854,95 +825,192 @@ public class TestClass
 }
 ";
 
-            var expected = this.CSharpDiagnostic().WithLocation(4, 9);
-
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            var offeredFixes = await this.GetOfferedCSharpFixesAsync(testCode).ConfigureAwait(false);
-            Assert.Empty(offeredFixes);
+            var expected = Diagnostic().WithLocation(4, 9);
+            await VerifyCSharpFixAsync(testCode, expected, testCode, CancellationToken.None).ConfigureAwait(false);
         }
 
-        protected override Project ApplyCompilationOptions(Project project)
+        [Theory]
+        [InlineData("class")]
+        [InlineData("struct")]
+        [WorkItem(2236, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/2236")]
+        public async Task TestDocumentationCultureIsUsedAsync(string typeKind)
         {
-            var resolver = new TestXmlReferenceResolver();
-
-            string contentValidSummary = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
-<TestClass>
-  <TestClass>
-    <summary>Initializes a new instance of the <see cref=""TestClass""/> class.</summary>
-  </TestClass>
-</TestClass>
+            var settings = @"
+{
+  ""settings"": {
+    ""documentationRules"": {
+      ""documentationCulture"": ""en-GB"",
+    }
+  }
+}
 ";
-            resolver.XmlReferences.Add("ValidSummary.xml", contentValidSummary);
 
-            string contentMissingSummary = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
-<TestClass>
-  <TestClass>
-  </TestClass>
-</TestClass>
-";
-            resolver.XmlReferences.Add("MissingSummary.xml", contentMissingSummary);
-
-            string contentEmptySummary = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
-<TestClass>
-  <TestClass>
-    <summary></summary>
-  </TestClass>
-</TestClass>
-";
-            resolver.XmlReferences.Add("EmptySummary.xml", contentEmptySummary);
-
-            string contentInvalidSummary = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
-<TestClass>
-  <TestClass>
-    <summary>Creates the <see cref=""TestClass""/> class.</summary>
-  </TestClass>
-</TestClass>
-";
-            resolver.XmlReferences.Add("InvalidSummary.xml", contentInvalidSummary);
-
-            string contentInvalidReference = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
-<TestClass>
-  <TestClass>
-    <summary>Initializes a new instance of the <see cref=""WrongClass""/> class.</summary>
-  </TestClass>
-</TestClass>
-";
-            resolver.XmlReferences.Add("InvalidReference.xml", contentInvalidReference);
-
-            string contentNoReference = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
-<TestClass>
-  <TestClass>
-    <summary>Initializes a new instance of the <see /> class.</summary>
-  </TestClass>
-</TestClass>
-";
-            resolver.XmlReferences.Add("NoReference.xml", contentNoReference);
-
-            string contentInvalidSecondPart = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
-<TestClass>
-  <TestClass>
-    <summary>Initializes a new instance of the <see cref=""TestClass""/>.</summary>
-  </TestClass>
-</TestClass>
-";
-            resolver.XmlReferences.Add("InvalidSecondPart.xml", contentInvalidSecondPart);
-
-            project = base.ApplyCompilationOptions(project);
-            project = project.WithCompilationOptions(project.CompilationOptions.WithXmlReferenceResolver(resolver));
-            return project;
+            await TestConstructorCorrectDocumentationSimpleAsync(
+                settings,
+                typeKind,
+                "public",
+                "Initialises a new instance of the ",
+                " " + typeKind,
+                false).ConfigureAwait(false);
         }
 
-        protected override IEnumerable<DiagnosticAnalyzer> GetCSharpDiagnosticAnalyzers()
+        /// <summary>
+        /// Verify that the codefix will work properly with Visual Studio generated documentation headers.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+        [Fact]
+        public async Task TestWithDefaultVisualStudioGenerationDocumentationAsync()
         {
-            yield return new SA1642ConstructorSummaryDocumentationMustBeginWithStandardText();
+            var testCode = @"
+public class TestClass
+{
+    /// <summary>
+    /// 
+    /// </summary>
+    public TestClass() { }
+}
+";
+
+            var fixedCode = @"
+public class TestClass
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref=""TestClass""/> class.
+    /// </summary>
+    public TestClass() { }
+}
+";
+
+            var expected = Diagnostic().WithLocation(4, 9);
+            await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
         }
 
-        protected override CodeFixProvider GetCSharpCodeFixProvider()
+        /// <summary>
+        /// Verify that the codefix will work properly when there are multiple empty lines.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+        [Fact]
+        public async Task TestWithMultipleEmptyLinesAsync()
         {
-            return new SA1642SA1643CodeFixProvider();
+            var testCode = @"
+public class TestClass
+{
+    /// <summary>
+    /// 
+    /// 
+    /// 
+    /// </summary>
+    public TestClass() { }
+}
+";
+
+            var fixedCode = @"
+public class TestClass
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref=""TestClass""/> class.
+    /// </summary>
+    public TestClass() { }
+}
+";
+
+            var expected = Diagnostic().WithLocation(4, 9);
+            await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
         }
 
-        private async Task TestEmptyConstructorAsync(string typeKind, string modifiers)
+        [Theory]
+        [WorkItem(2686, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/2686")]
+        [InlineData("")]
+        [InlineData(" ")]
+        public async Task TestConstructorEmptyDocumentationSingleLineAsync(string emptyContent)
+        {
+            var testCode = $@"namespace FooNamespace
+{{
+    public class ClassName
+    {{
+        /// <summary>{emptyContent}</summary>
+        public ClassName()
+        {{
+        }}
+    }}
+}}";
+
+            var fixedCode = $@"namespace FooNamespace
+{{
+    public class ClassName
+    {{
+        /// <summary>Initializes a new instance of the <see cref=""ClassName""/> class.</summary>
+        public ClassName()
+        {{
+        }}
+    }}
+}}";
+
+            DiagnosticResult expected = Diagnostic().WithLocation(5, 13);
+            await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        [Fact]
+        [WorkItem(2963, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/2963")]
+        public async Task TestConstructorNoCRefDocumentationSingleLineAsync()
+        {
+            var testCode = @"
+public class TestClass
+{
+    /// <summary>Initializes a new instance of the TestClass class.</summary>
+    public TestClass() { }
+}
+";
+
+            var fixedCode = @"
+public class TestClass
+{
+    /// <summary>Initializes a new instance of the <see cref=""TestClass""/> class.</summary>
+    public TestClass() { }
+}
+";
+
+            var expected = Diagnostic().WithLocation(4, 9);
+            await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        [Theory]
+        [WorkItem(2686, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/2686")]
+        [InlineData("")]
+        [InlineData(" ")]
+        public async Task TestConstructorEmptyDocumentationAsync(string emptyContent)
+        {
+            var testCode = $@"namespace FooNamespace
+{{
+    public class ClassName
+    {{
+        /// <summary>
+        ///{emptyContent}
+        /// </summary>
+        public ClassName()
+        {{
+        }}
+    }}
+}}";
+
+            var fixedCode = $@"namespace FooNamespace
+{{
+    public class ClassName
+    {{
+        /// <summary>
+        /// Initializes a new instance of the <see cref=""ClassName""/> class.
+        /// </summary>
+        public ClassName()
+        {{
+        }}
+    }}
+}}";
+
+            DiagnosticResult expected = Diagnostic().WithLocation(5, 13);
+            await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        private static async Task TestEmptyConstructorAsync(string typeKind, string modifiers)
         {
             var testCode = @"namespace FooNamespace
 {{
@@ -960,10 +1028,13 @@ public class TestClass
 }}";
 
             string arguments = typeKind == "struct" && modifiers != "static" ? "int argument" : null;
-            await this.VerifyCSharpDiagnosticAsync(string.Format(testCode, typeKind, modifiers, arguments), EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(string.Format(testCode, typeKind, modifiers, arguments), DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
-        private async Task TestConstructorCorrectDocumentationAsync(string typeKind, string modifiers, string part1, string part2, string part3, bool generic)
+        private static Task TestConstructorCorrectDocumentationAsync(string typeKind, string modifiers, string part1, string part2, string part3, bool generic)
+            => TestConstructorCorrectDocumentationAsync(settings: null, typeKind, modifiers, part1, part2, part3, generic);
+
+        private static async Task TestConstructorCorrectDocumentationAsync(string settings, string typeKind, string modifiers, string part1, string part2, string part3, bool generic)
         {
             // First test it all on one line
             var testCode = @"namespace FooNamespace
@@ -981,7 +1052,7 @@ public class TestClass
 }}";
 
             string arguments = typeKind == "struct" && modifiers != "static" ? "int argument" : null;
-            await this.VerifyCSharpDiagnosticAsync(string.Format(testCode, typeKind, generic ? "<T1, T2>" : string.Empty, generic ? "{T1, T2}" : string.Empty, part1, part2, part3, modifiers, arguments), EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(string.Format(testCode, typeKind, generic ? "<T1, T2>" : string.Empty, generic ? "{T1, T2}" : string.Empty, part1, part2, part3, modifiers, arguments), settings, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
 
             // Then test splitting after the <see> element
             testCode = @"namespace FooNamespace
@@ -999,7 +1070,7 @@ public class TestClass
     }}
 }}";
 
-            await this.VerifyCSharpDiagnosticAsync(string.Format(testCode, typeKind, generic ? "<T1, T2>" : string.Empty, generic ? "{T1, T2}" : string.Empty, part1, part2, part3, modifiers, arguments), EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(string.Format(testCode, typeKind, generic ? "<T1, T2>" : string.Empty, generic ? "{T1, T2}" : string.Empty, part1, part2, part3, modifiers, arguments), settings, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
 
             // Then test splitting before the <see> element
             testCode = @"namespace FooNamespace
@@ -1017,62 +1088,62 @@ public class TestClass
     }}
 }}";
 
-            await this.VerifyCSharpDiagnosticAsync(string.Format(testCode, typeKind, generic ? "<T1, T2>" : string.Empty, generic ? "{T1, T2}" : string.Empty, part1, part2, part3, modifiers, arguments), EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+            await VerifyCSharpDiagnosticAsync(string.Format(testCode, typeKind, generic ? "<T1, T2>" : string.Empty, generic ? "{T1, T2}" : string.Empty, part1, part2, part3, modifiers, arguments), settings, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
-        private async Task TestConstructorCorrectDocumentationSimpleAsync(string typeKind, string modifiers, string part1, string part2, bool generic)
+        private static Task TestConstructorCorrectDocumentationSimpleAsync(string typeKind, string modifiers, string part1, string part2, bool generic)
+            => TestConstructorCorrectDocumentationSimpleAsync(settings: null, typeKind, modifiers, part1, part2, generic);
+
+        private static async Task TestConstructorCorrectDocumentationSimpleAsync(string settings, string typeKind, string modifiers, string part1, string part2, bool generic)
         {
-            await this.TestConstructorCorrectDocumentationAsync(typeKind, modifiers, part1, part2, ".", generic).ConfigureAwait(false);
+            await TestConstructorCorrectDocumentationAsync(settings, typeKind, modifiers, part1, part2, ".", generic).ConfigureAwait(false);
         }
 
-        private async Task TestConstructorCorrectDocumentationCustomizedAsync(string typeKind, string modifiers, string part1, string part2, bool generic)
+        private static async Task TestConstructorCorrectDocumentationCustomizedAsync(string typeKind, string modifiers, string part1, string part2, bool generic)
         {
-            await this.TestConstructorCorrectDocumentationAsync(typeKind, modifiers, part1, part2, " with A and B.", generic).ConfigureAwait(false);
+            await TestConstructorCorrectDocumentationAsync(settings: null, typeKind, modifiers, part1, part2, " with A and B.", generic).ConfigureAwait(false);
         }
 
-        private async Task TestConstructorMissingDocumentationAsync(string typeKind, string modifiers, string part1, string part2, bool generic)
+        private static async Task TestConstructorMissingDocumentationAsync(string typeKind, string modifiers, string part1, string part2, bool generic)
         {
-            var testCode = @"namespace FooNamespace
-{{
-    public {0} Foo{1}
-    {{
-        /// <summary>
-        /// </summary>
-        {2}
-        Foo({3})
-        {{
-
-        }}
-    }}
-}}";
+            string typeParameters = generic ? "<T1, T2>" : string.Empty;
             string arguments = typeKind == "struct" && modifiers != "static" ? "int argument" : null;
-            testCode = string.Format(testCode, typeKind, generic ? "<T1, T2>" : string.Empty, modifiers, arguments);
-
-            DiagnosticResult expected = this.CSharpDiagnostic().WithLocation(5, 13);
-
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-
-            var fixedCode = @"namespace FooNamespace
+            var testCode = $@"namespace FooNamespace
 {{
-    public {0} Foo{1}
+    public {typeKind} Foo{typeParameters}
     {{
         /// <summary>
-        /// {3}<see cref=""Foo{2}""/>{4}{5}
         /// </summary>
-        {6}
-        Foo({7})
+        {modifiers}
+        Foo({arguments})
         {{
 
         }}
     }}
 }}";
 
+            string crefTypeParameters = generic ? "{T1, T2}" : string.Empty;
             string part3 = part2.EndsWith(".") ? string.Empty : ".";
-            fixedCode = string.Format(fixedCode, typeKind, generic ? "<T1, T2>" : string.Empty, generic ? "{T1, T2}" : string.Empty, part1, part2, part3, modifiers, arguments);
-            await this.VerifyCSharpFixAsync(testCode, fixedCode).ConfigureAwait(false);
+            var fixedCode = $@"namespace FooNamespace
+{{
+    public {typeKind} Foo{typeParameters}
+    {{
+        /// <summary>
+        /// {part1}<see cref=""Foo{crefTypeParameters}""/>{part2}{part3}
+        /// </summary>
+        {modifiers}
+        Foo({arguments})
+        {{
+
+        }}
+    }}
+}}";
+
+            DiagnosticResult expected = Diagnostic().WithLocation(5, 13);
+            await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
         }
 
-        private async Task TestConstructorSimpleDocumentationAsync(string typeKind, string modifiers, string part1, string part2, bool generic)
+        private static async Task TestConstructorSimpleDocumentationAsync(string typeKind, string modifiers, string part1, string part2, bool generic)
         {
             string part3 = part2.EndsWith(".") ? string.Empty : ".";
 
@@ -1093,12 +1164,7 @@ public class TestClass
             string arguments = typeKind == "struct" && modifiers != "static" ? "int argument" : null;
             testCode = string.Format(testCode, typeKind, generic ? "<T1, T2>" : string.Empty, generic ? "{T1, T2}" : string.Empty, part1, part2, part3, modifiers, arguments);
 
-            DiagnosticResult expected = this.CSharpDiagnostic().WithLocation(5, 13);
-
-            await this.VerifyCSharpDiagnosticAsync(
-                testCode,
-                expected,
-                CancellationToken.None).ConfigureAwait(false);
+            DiagnosticResult expected = Diagnostic().WithLocation(5, 13);
 
             var fixedCode = @"namespace FooNamespace
 {{
@@ -1115,10 +1181,10 @@ public class TestClass
     }}
 }}";
             fixedCode = string.Format(fixedCode, typeKind, generic ? "<T1, T2>" : string.Empty, generic ? "{T1, T2}" : string.Empty, part1, part2, part3, modifiers, arguments);
-            await this.VerifyCSharpFixAsync(testCode, fixedCode).ConfigureAwait(false);
+            await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
         }
 
-        private async Task TestConstructorSimpleDocumentationWrongTypeNameAsync(string typeKind, string modifiers, string part1, string part2, bool generic)
+        private static async Task TestConstructorSimpleDocumentationWrongTypeNameAsync(string typeKind, string modifiers, string part1, string part2, bool generic)
         {
             string part3 = part2.EndsWith(".") ? string.Empty : ".";
 
@@ -1139,12 +1205,7 @@ public class TestClass
             string arguments = typeKind == "struct" && modifiers != "static" ? "int argument" : null;
             testCode = string.Format(testCode, typeKind, generic ? "<T1, T2>" : string.Empty, generic ? "{T1, T2}" : string.Empty, part1, part2, part3, modifiers, arguments);
 
-            DiagnosticResult expected = this.CSharpDiagnostic().WithLocation(5, 13);
-
-            await this.VerifyCSharpDiagnosticAsync(
-                testCode,
-                expected,
-                CancellationToken.None).ConfigureAwait(false);
+            DiagnosticResult expected = Diagnostic().WithLocation(5, 13);
 
             var fixedCode = @"namespace FooNamespace
 {{
@@ -1161,7 +1222,104 @@ public class TestClass
     }}
 }}";
             fixedCode = string.Format(fixedCode, typeKind, generic ? "<T1, T2>" : string.Empty, generic ? "{T1, T2}" : string.Empty, part1, part2, part3, modifiers, arguments);
-            await this.VerifyCSharpFixAsync(testCode, fixedCode).ConfigureAwait(false);
+            await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        private static Task VerifyCSharpDiagnosticAsync(string source, DiagnosticResult[] expected, CancellationToken cancellationToken)
+            => VerifyCSharpDiagnosticAsync(source, testSettings: null, expected, cancellationToken);
+
+        private static Task VerifyCSharpDiagnosticAsync(string source, string testSettings, DiagnosticResult[] expected, CancellationToken cancellationToken)
+        {
+            var test = CreateTest(testSettings, expected);
+            test.TestCode = source;
+
+            return test.RunAsync(cancellationToken);
+        }
+
+        private static Task VerifyCSharpFixAsync(string source, DiagnosticResult expected, string fixedSource, CancellationToken cancellationToken)
+            => VerifyCSharpFixAsync(source, new[] { expected }, fixedSource, cancellationToken);
+
+        private static Task VerifyCSharpFixAsync(string source, DiagnosticResult[] expected, string fixedSource, CancellationToken cancellationToken)
+        {
+            var test = CreateTest(testSettings: null, expected);
+            test.TestCode = source;
+            test.FixedCode = fixedSource;
+
+            return test.RunAsync(cancellationToken);
+        }
+
+        private static StyleCopCodeFixVerifier<SA1642ConstructorSummaryDocumentationMustBeginWithStandardText, SA1642SA1643CodeFixProvider>.CSharpTest CreateTest(string testSettings, DiagnosticResult[] expected)
+        {
+            string contentValidSummary = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<TestClass>
+  <TestClass>
+    <summary>Initializes a new instance of the <see cref=""TestClass""/> class.</summary>
+  </TestClass>
+</TestClass>
+";
+            string contentMissingSummary = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<TestClass>
+  <TestClass>
+  </TestClass>
+</TestClass>
+";
+            string contentEmptySummary = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<TestClass>
+  <TestClass>
+    <summary></summary>
+  </TestClass>
+</TestClass>
+";
+            string contentInvalidSummary = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<TestClass>
+  <TestClass>
+    <summary>Creates the <see cref=""TestClass""/> class.</summary>
+  </TestClass>
+</TestClass>
+";
+            string contentInvalidReference = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<TestClass>
+  <TestClass>
+    <summary>Initializes a new instance of the <see cref=""WrongClass""/> class.</summary>
+  </TestClass>
+</TestClass>
+";
+            string contentNoReference = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<TestClass>
+  <TestClass>
+    <summary>Initializes a new instance of the <see /> class.</summary>
+  </TestClass>
+</TestClass>
+";
+            string contentInvalidSecondPart = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<TestClass>
+  <TestClass>
+    <summary>Initializes a new instance of the <see cref=""TestClass""/>.</summary>
+  </TestClass>
+</TestClass>
+";
+
+            var test = new StyleCopCodeFixVerifier<SA1642ConstructorSummaryDocumentationMustBeginWithStandardText, SA1642SA1643CodeFixProvider>.CSharpTest
+            {
+                XmlReferences =
+                {
+                    { "ValidSummary.xml", contentValidSummary },
+                    { "MissingSummary.xml", contentMissingSummary },
+                    { "EmptySummary.xml", contentEmptySummary },
+                    { "InvalidSummary.xml", contentInvalidSummary },
+                    { "InvalidReference.xml", contentInvalidReference },
+                    { "NoReference.xml", contentNoReference },
+                    { "InvalidSecondPart.xml", contentInvalidSecondPart },
+                },
+            };
+
+            test.ExpectedDiagnostics.AddRange(expected);
+            if (testSettings != null)
+            {
+                test.Settings = testSettings;
+            }
+
+            return test;
         }
     }
 }

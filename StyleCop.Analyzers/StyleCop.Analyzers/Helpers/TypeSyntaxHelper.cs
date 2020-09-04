@@ -1,8 +1,9 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Helpers
 {
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using StyleCop.Analyzers.Lightup;
@@ -54,6 +55,16 @@ namespace StyleCop.Analyzers.Helpers
             default:
                 return false;
             }
+        }
+
+        public static TypeSyntax StripRefFromType(this TypeSyntax syntax)
+        {
+            if (syntax.IsKind(SyntaxKindEx.RefType))
+            {
+                syntax = ((RefTypeSyntaxWrapper)syntax).Type;
+            }
+
+            return syntax;
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.CSharp7.Lightup
 {
@@ -44,7 +44,7 @@ namespace StyleCop.Analyzers.Test.CSharp7.Lightup
             var newOpenParenToken = SyntaxFactory.Token(SyntaxKind.OpenParenToken).WithLeadingTrivia(SyntaxFactory.Space);
             var wrapperWithModifiedOpenParenToken = wrapper.WithOpenParenToken(newOpenParenToken);
             Assert.NotNull(wrapperWithModifiedOpenParenToken.SyntaxNode);
-            Assert.Equal(1, wrapperWithModifiedOpenParenToken.OpenParenToken.LeadingTrivia.Count);
+            Assert.Single(wrapperWithModifiedOpenParenToken.OpenParenToken.LeadingTrivia);
             Assert.Equal(" ", wrapperWithModifiedOpenParenToken.OpenParenToken.LeadingTrivia.ToString());
 
             var newElements = wrapper.Elements.Replace(wrapper.Elements[0], (TupleElementSyntaxWrapper)SyntaxFactory.TupleElement(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword))));
@@ -62,7 +62,7 @@ namespace StyleCop.Analyzers.Test.CSharp7.Lightup
             var newCloseParenToken = SyntaxFactory.Token(SyntaxKind.CloseParenToken).WithLeadingTrivia(SyntaxFactory.Space);
             var wrapperWithModifiedCloseParenToken = wrapper.WithCloseParenToken(newCloseParenToken);
             Assert.NotNull(wrapperWithModifiedCloseParenToken.SyntaxNode);
-            Assert.Equal(1, wrapperWithModifiedCloseParenToken.CloseParenToken.LeadingTrivia.Count);
+            Assert.Single(wrapperWithModifiedCloseParenToken.CloseParenToken.LeadingTrivia);
             Assert.Equal(" ", wrapperWithModifiedCloseParenToken.CloseParenToken.LeadingTrivia.ToString());
         }
 

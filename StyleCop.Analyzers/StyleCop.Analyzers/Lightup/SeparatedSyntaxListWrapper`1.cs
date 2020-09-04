@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Lightup
 {
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.ComponentModel;
     using System.Linq;
     using Microsoft.CodeAnalysis;
@@ -51,11 +52,19 @@ namespace StyleCop.Analyzers.Lightup
 
         public static bool operator ==(SeparatedSyntaxListWrapper<TNode> left, SeparatedSyntaxListWrapper<TNode> right)
         {
+            // Currently unused
+            _ = left;
+            _ = right;
+
             throw new NotImplementedException();
         }
 
         public static bool operator !=(SeparatedSyntaxListWrapper<TNode> left, SeparatedSyntaxListWrapper<TNode> right)
         {
+            // Currently unused
+            _ = left;
+            _ = right;
+
             throw new NotImplementedException();
         }
 
@@ -97,12 +106,12 @@ namespace StyleCop.Analyzers.Lightup
 
         public Enumerator GetEnumerator()
         {
-            throw new NotImplementedException();
+            return new Enumerator(this);
         }
 
         IEnumerator<TNode> IEnumerable<TNode>.GetEnumerator()
         {
-            throw new NotImplementedException();
+            return this.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -148,34 +157,72 @@ namespace StyleCop.Analyzers.Lightup
 
         public override abstract string ToString();
 
-        public struct Enumerator
+        public struct Enumerator : IEnumerator<TNode>
         {
-            public TNode Current
+            private readonly SeparatedSyntaxListWrapper<TNode> wrapper;
+            private int index;
+            private TNode current;
+
+            public Enumerator(SeparatedSyntaxListWrapper<TNode> wrapper)
             {
-                get
-                {
-                    throw new NotImplementedException();
-                }
+                this.wrapper = wrapper;
+                this.index = -1;
+                this.current = default;
             }
+
+            public TNode Current => this.current;
+
+            object IEnumerator.Current => this.Current;
 
             public override bool Equals(object obj)
             {
-                throw new NotImplementedException();
+                Enumerator? otherOpt = obj as Enumerator?;
+                if (!otherOpt.HasValue)
+                {
+                    return false;
+                }
+
+                Enumerator other = otherOpt.GetValueOrDefault();
+                return other.wrapper == this.wrapper
+                    && other.index == this.index;
             }
 
             public override int GetHashCode()
             {
-                throw new NotImplementedException();
+                if (this.wrapper == null)
+                {
+                    return 0;
+                }
+
+                return this.wrapper.GetHashCode() ^ this.index;
+            }
+
+            public void Dispose()
+            {
             }
 
             public bool MoveNext()
             {
-                throw new NotImplementedException();
+                if (this.index < -1)
+                {
+                    return false;
+                }
+
+                if (this.index == this.wrapper.Count - 1)
+                {
+                    this.index = int.MinValue;
+                    return false;
+                }
+
+                this.index++;
+                this.current = this.wrapper[this.index];
+                return true;
             }
 
             public void Reset()
             {
-                throw new NotImplementedException();
+                this.index = -1;
+                this.current = default;
             }
         }
 
@@ -183,6 +230,11 @@ namespace StyleCop.Analyzers.Lightup
             where TSyntax : SyntaxNode
         {
             private readonly SeparatedSyntaxList<TSyntax> syntaxList;
+
+            public AutoWrapSeparatedSyntaxList()
+                : this(default)
+            {
+            }
 
             public AutoWrapSeparatedSyntaxList(SeparatedSyntaxList<TSyntax> syntaxList)
             {
@@ -279,7 +331,7 @@ namespace StyleCop.Analyzers.Lightup
 
         private sealed class UnsupportedSyntaxList : SeparatedSyntaxListWrapper<TNode>
         {
-            private static readonly SeparatedSyntaxList<SyntaxNode> SyntaxList = default(SeparatedSyntaxList<SyntaxNode>);
+            private static readonly SeparatedSyntaxList<SyntaxNode> SyntaxList = default;
 
             public UnsupportedSyntaxList()
             {
@@ -313,7 +365,7 @@ namespace StyleCop.Analyzers.Lightup
                 => SyntaxWrapper.Wrap(SyntaxList.First());
 
             public override TNode FirstOrDefault()
-                => SyntaxWrapper.Wrap(default(SyntaxNode));
+                => SyntaxWrapper.Wrap(default);
 
             public override int GetHashCode()
                 => SyntaxList.GetHashCode();
@@ -353,7 +405,7 @@ namespace StyleCop.Analyzers.Lightup
                 => SyntaxList.LastIndexOf(node => predicate(SyntaxWrapper.Wrap(node)));
 
             public override TNode LastOrDefault()
-                => SyntaxWrapper.Wrap(default(SyntaxNode));
+                => SyntaxWrapper.Wrap(default);
 
             public override SeparatedSyntaxListWrapper<TNode> Remove(TNode node)
             {

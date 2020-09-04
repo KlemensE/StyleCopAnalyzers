@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.SpacingRules
 {
@@ -9,13 +9,13 @@ namespace StyleCop.Analyzers.SpacingRules
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Helpers;
-    using Helpers.ObjectPools;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Text;
-    using Settings.ObjectModel;
+    using StyleCop.Analyzers.Helpers;
+    using StyleCop.Analyzers.Helpers.ObjectPools;
+    using StyleCop.Analyzers.Settings.ObjectModel;
 
     /// <summary>
     /// Implements a code fix for <see cref="SA1027UseTabsCorrectly"/>.
@@ -86,7 +86,7 @@ namespace StyleCop.Analyzers.SpacingRules
                     {
                         if (useTabs)
                         {
-                            replacement.Length = replacement.Length - spaceCount;
+                            replacement.Length -= spaceCount;
                             replacement.Append('\t');
                             spaceCount = 0;
                         }
@@ -113,7 +113,7 @@ namespace StyleCop.Analyzers.SpacingRules
                                 if (offsetWithinTabColumn == 0)
                                 {
                                     // We reached a tab stop.
-                                    replacement.Length = replacement.Length - spaceCount;
+                                    replacement.Length -= spaceCount;
                                     replacement.Append('\t');
                                     spaceCount = 0;
                                 }

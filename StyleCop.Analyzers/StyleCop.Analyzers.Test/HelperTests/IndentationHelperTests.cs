@@ -1,18 +1,18 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.HelperTests
 {
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Analyzers.Settings.ObjectModel;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.Formatting;
     using Microsoft.CodeAnalysis.Text;
     using StyleCop.Analyzers.Helpers;
-    using StyleCop.Analyzers.Test.Helpers;
+    using StyleCop.Analyzers.Settings.ObjectModel;
+    using StyleCop.Analyzers.Test.Verifiers;
     using Xunit;
 
     /// <summary>
@@ -99,7 +99,7 @@ namespace StyleCop.Analyzers.Test.HelperTests
         private const string TestFilename = "Test0.cs";
 
         /// <summary>
-        /// Verify the workings of IndentationHelper.GetIndentationSteps./>
+        /// Verify the workings of <see cref="IndentationHelper.GetIndentationSteps(IndentationSettings, SyntaxToken)"/>.
         /// </summary>
         /// <param name="indentationString">The indentation string to use with the test.</param>
         /// <param name="expectedIndentationSteps">The expected number of indentation steps.</param>
@@ -111,7 +111,7 @@ namespace StyleCop.Analyzers.Test.HelperTests
         public async Task VerifyGetIndentationStepsAsync(string indentationString, int expectedIndentationSteps, int indentationSize, int tabSize)
         {
             var testSource = $"{indentationString}public class TestClass {{}}";
-            var document = CreateTestDocument(testSource, indentationSize, false, tabSize);
+            var document = await CreateTestDocumentAsync(testSource, indentationSize, false, tabSize, CancellationToken.None).ConfigureAwait(false);
             StyleCopSettings settings = SettingsHelper.GetStyleCopSettings(document.Project.AnalyzerOptions, CancellationToken.None);
 
             var syntaxRoot = await document.GetSyntaxRootAsync().ConfigureAwait(false);
@@ -121,14 +121,15 @@ namespace StyleCop.Analyzers.Test.HelperTests
         }
 
         /// <summary>
-        /// Verify the that IndentationHelper.GetIndentationSteps will return zero (0) for tokens that are not the first token on a line.
+        /// Verify the that <see cref="IndentationHelper.GetIndentationSteps(IndentationSettings, SyntaxToken)"/> will
+        /// return zero (0) for tokens that are not the first token on a line.
         /// </summary>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task VerifyGetIndentationStepsForTokenNotAtStartOfLineAsync()
         {
             var testSource = "    public class TestClass {}";
-            var document = CreateTestDocument(testSource);
+            var document = await CreateTestDocumentAsync(testSource, cancellationToken: CancellationToken.None).ConfigureAwait(false);
             StyleCopSettings settings = SettingsHelper.GetStyleCopSettings(document.Project.AnalyzerOptions, CancellationToken.None);
 
             var syntaxRoot = await document.GetSyntaxRootAsync().ConfigureAwait(false);
@@ -137,9 +138,9 @@ namespace StyleCop.Analyzers.Test.HelperTests
             Assert.Equal(0, IndentationHelper.GetIndentationSteps(settings.Indentation, secondToken));
         }
 
-        private static Document CreateTestDocument(string source, int indentationSize = 4, bool useTabs = false, int tabSize = 4)
+        private static async Task<Document> CreateTestDocumentAsync(string source, int indentationSize = 4, bool useTabs = false, int tabSize = 4, CancellationToken cancellationToken = default)
         {
-            var workspace = new AdhocWorkspace();
+            var workspace = GenericAnalyzerTest.CreateWorkspace();
             workspace.Options = workspace.Options
                 .WithChangedOption(FormattingOptions.IndentationSize, LanguageNames.CSharp, indentationSize)
                 .WithChangedOption(FormattingOptions.UseTabs, LanguageNames.CSharp, useTabs)
@@ -148,15 +149,12 @@ namespace StyleCop.Analyzers.Test.HelperTests
             var projectId = ProjectId.CreateNewId();
             var documentId = DocumentId.CreateNewId(projectId);
             var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true);
+            var references = await GenericAnalyzerTest.ReferenceAssemblies.ResolveAsync(LanguageNames.CSharp, cancellationToken).ConfigureAwait(false);
 
             var solution = workspace.CurrentSolution
                 .AddProject(projectId, TestProjectName, TestProjectName, LanguageNames.CSharp)
                 .WithProjectCompilationOptions(projectId, compilationOptions)
-                .AddMetadataReference(projectId, MetadataReferences.CorlibReference)
-                .AddMetadataReference(projectId, MetadataReferences.SystemReference)
-                .AddMetadataReference(projectId, MetadataReferences.SystemCoreReference)
-                .AddMetadataReference(projectId, MetadataReferences.CSharpSymbolsReference)
-                .AddMetadataReference(projectId, MetadataReferences.CodeAnalysisReference)
+                .AddMetadataReferences(projectId, references)
                 .AddDocument(documentId, TestFilename, SourceText.From(source));
 
             StyleCopSettings defaultSettings = new StyleCopSettings();
@@ -175,7 +173,7 @@ namespace StyleCop.Analyzers.Test.HelperTests
   }}
 }}
 ";
-                var settingsDocumentId = DocumentId.CreateNewId(projectId);
+
                 solution = solution.AddAdditionalDocument(documentId, SettingsHelper.SettingsFileName, settings);
             }
 

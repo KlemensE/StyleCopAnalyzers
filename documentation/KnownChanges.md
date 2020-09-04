@@ -33,6 +33,7 @@ lists each of these issues, along with a link to the issue where the decision wa
 | SA1630 | Documentation text should contain whitespace | [#1057](https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/1057) |
 | SA1631 | Documentation should meet character percentage | [#1057](https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/1057) |
 | SA1632 | Documentation text should meet minimum character length | [#1057](https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/1057) |
+| SA1644 | DocumentationHeadersMustNotContainBlankLines | [#164](https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/164) |
 | SA1645 | Included documentation file does not exist | [#165](https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/165) |
 | SA1646 | Included documentation XPath does not exist | [#166](https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/166) |
 | SA1647 | Include node does not contain valid file and path | [#167](https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/167) |
@@ -198,6 +199,10 @@ This rule is disabled by default in StyleCop Analyzers, but can be enabled by us
 
 :warning: StyleCop Analyzers does not report SA1305 for parameters in overriding methods and methods which implement an
 interface. StyleCop Classic reported SA1305 for all methods.
+
+### SA1313
+
+StyleCop Analyzers allows the single and double underscore (`_` and `__`) as lambda parameter names.
 
 ## Maintainability Rules
 

@@ -20,7 +20,7 @@ namespace StyleCop.Analyzers.ReadabilityRules {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class ReadabilityResources {
@@ -431,7 +431,7 @@ namespace StyleCop.Analyzers.ReadabilityRules {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Opening parenthesis or bracket should be on declaration line..
+        ///   Looks up a localized string similar to Opening parenthesis or bracket should be on declaration line.
         /// </summary>
         internal static string SA1110MessageFormat {
             get {
@@ -512,7 +512,7 @@ namespace StyleCop.Analyzers.ReadabilityRules {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Comma should be on the same line as previous parameter..
+        ///   Looks up a localized string similar to Comma should be on the same line as previous parameter.
         /// </summary>
         internal static string SA1113MessageFormat {
             get {
@@ -566,7 +566,7 @@ namespace StyleCop.Analyzers.ReadabilityRules {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The parameter should begin on the line after the previous parameter..
+        ///   Looks up a localized string similar to The parameter should begin on the line after the previous parameter.
         /// </summary>
         internal static string SA1115MessageFormat {
             get {
@@ -629,7 +629,7 @@ namespace StyleCop.Analyzers.ReadabilityRules {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The parameters should all be placed on the same line or each parameter should be placed on its own line..
+        ///   Looks up a localized string similar to The parameters should all be placed on the same line or each parameter should be placed on its own line.
         /// </summary>
         internal static string SA1117MessageFormat {
             get {
@@ -791,7 +791,7 @@ namespace StyleCop.Analyzers.ReadabilityRules {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Region should not be located within a code element..
+        ///   Looks up a localized string similar to Region should not be located within a code element.
         /// </summary>
         internal static string SA1123MessageFormat {
             get {
@@ -1124,7 +1124,7 @@ namespace StyleCop.Analyzers.ReadabilityRules {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Each attribute should be placed in its own set of square brackets..
+        ///   Looks up a localized string similar to Each attribute should be placed in its own set of square brackets.
         /// </summary>
         internal static string SA1133MessageFormat {
             get {
@@ -1160,7 +1160,7 @@ namespace StyleCop.Analyzers.ReadabilityRules {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Each attribute should be placed on its own line of code..
+        ///   Looks up a localized string similar to Each attribute should be placed on its own line of code.
         /// </summary>
         internal static string SA1134MessageFormat {
             get {
@@ -1174,6 +1174,51 @@ namespace StyleCop.Analyzers.ReadabilityRules {
         internal static string SA1134Title {
             get {
                 return ResourceManager.GetString("SA1134Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Qualify using directive.
+        /// </summary>
+        internal static string SA1135CodeFix {
+            get {
+                return ResourceManager.GetString("SA1135CodeFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All using directives should be qualified..
+        /// </summary>
+        internal static string SA1135Description {
+            get {
+                return ResourceManager.GetString("SA1135Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using directive for namespace &apos;{0}&apos; should be qualified.
+        /// </summary>
+        internal static string SA1135MessageFormatNamespace {
+            get {
+                return ResourceManager.GetString("SA1135MessageFormatNamespace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using directive for type &apos;{0}&apos; should be qualified.
+        /// </summary>
+        internal static string SA1135MessageFormatType {
+            get {
+                return ResourceManager.GetString("SA1135MessageFormatType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using directives should be qualified.
+        /// </summary>
+        internal static string SA1135Title {
+            get {
+                return ResourceManager.GetString("SA1135Title", resourceCulture);
             }
         }
         
@@ -1273,6 +1318,78 @@ namespace StyleCop.Analyzers.ReadabilityRules {
         internal static string SA1139Title {
             get {
                 return ResourceManager.GetString("SA1139Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replace with tuple syntax.
+        /// </summary>
+        internal static string SA1141CodeFix {
+            get {
+                return ResourceManager.GetString("SA1141CodeFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use tuple syntax instead of the underlying ValueTuple implementation type..
+        /// </summary>
+        internal static string SA1141Description {
+            get {
+                return ResourceManager.GetString("SA1141Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use tuple syntax.
+        /// </summary>
+        internal static string SA1141MessageFormat {
+            get {
+                return ResourceManager.GetString("SA1141MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use tuple syntax.
+        /// </summary>
+        internal static string SA1141Title {
+            get {
+                return ResourceManager.GetString("SA1141Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use tuple field name.
+        /// </summary>
+        internal static string SA1142CodeFix {
+            get {
+                return ResourceManager.GetString("SA1142CodeFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A field of a tuple was referenced by its metadata name when a field name is available..
+        /// </summary>
+        internal static string SA1142Description {
+            get {
+                return ResourceManager.GetString("SA1142Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refer to tuple fields by name.
+        /// </summary>
+        internal static string SA1142MessageFormat {
+            get {
+                return ResourceManager.GetString("SA1142MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refer to tuple fields by name.
+        /// </summary>
+        internal static string SA1142Title {
+            get {
+                return ResourceManager.GetString("SA1142Title", resourceCulture);
             }
         }
         

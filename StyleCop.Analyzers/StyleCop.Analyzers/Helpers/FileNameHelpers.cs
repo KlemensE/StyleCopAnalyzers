@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Helpers
 {
     using System.Linq;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
-    using Settings.ObjectModel;
+    using StyleCop.Analyzers.Settings.ObjectModel;
     using Path = System.IO.Path;
 
     internal static class FileNameHelpers
@@ -29,8 +29,7 @@ namespace StyleCop.Analyzers.Helpers
 
         internal static string GetConventionalFileName(MemberDeclarationSyntax declaration, FileNamingConvention convention)
         {
-            var typeDeclaration = declaration as TypeDeclarationSyntax;
-            if (typeDeclaration != null)
+            if (declaration is TypeDeclarationSyntax typeDeclaration)
             {
                 if (typeDeclaration.TypeParameterList == null)
                 {

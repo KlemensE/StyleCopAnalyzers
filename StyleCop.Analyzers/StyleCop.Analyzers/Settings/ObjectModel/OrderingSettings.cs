@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Settings.ObjectModel
 {
@@ -20,22 +20,22 @@ namespace StyleCop.Analyzers.Settings.ObjectModel
         /// <summary>
         /// This is the backing field for the <see cref="ElementOrder"/> property.
         /// </summary>
-        private ImmutableArray<OrderingTrait>.Builder elementOrder;
+        private readonly ImmutableArray<OrderingTrait>.Builder elementOrder;
 
         /// <summary>
         /// This is the backing field for the <see cref="SystemUsingDirectivesFirst"/> property.
         /// </summary>
-        private bool systemUsingDirectivesFirst;
+        private readonly bool systemUsingDirectivesFirst;
 
         /// <summary>
         /// This is the backing field for the <see cref="UsingDirectivesPlacement"/> property.
         /// </summary>
-        private UsingDirectivesPlacement usingDirectivesPlacement;
+        private readonly UsingDirectivesPlacement usingDirectivesPlacement;
 
         /// <summary>
         /// This is the backing field for the <see cref="BlankLinesBetweenUsingGroups"/> property.
         /// </summary>
-        private OptionSetting blankLinesBetweenUsingGroups;
+        private readonly OptionSetting blankLinesBetweenUsingGroups;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OrderingSettings"/> class.

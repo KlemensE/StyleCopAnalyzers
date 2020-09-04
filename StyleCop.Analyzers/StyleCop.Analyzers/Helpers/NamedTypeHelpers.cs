@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Helpers
 {
@@ -8,6 +8,8 @@ namespace StyleCop.Analyzers.Helpers
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+    using StyleCop.Analyzers.Lightup;
 
     internal static class NamedTypeHelpers
     {
@@ -119,8 +121,7 @@ namespace StyleCop.Analyzers.Helpers
 
         internal static bool IsPartialDeclaration(MemberDeclarationSyntax declaration)
         {
-            var typeDeclaration = declaration as TypeDeclarationSyntax;
-            if (typeDeclaration != null)
+            if (declaration is TypeDeclarationSyntax typeDeclaration)
             {
                 return typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword);
             }
@@ -132,9 +133,9 @@ namespace StyleCop.Analyzers.Helpers
         /// Returns whether or not a member is implementing an interface member.
         /// </summary>
         /// <remarks>
-        /// This method does only check the interfaces the containing type is implementing directly.
+        /// <para>This method does only check the interfaces the containing type is implementing directly.
         /// If a derived class is implementing an interface and this member is required for it
-        /// this method will still return false.
+        /// this method will still return false.</para>
         /// </remarks>
         /// <param name="memberSymbol">The member symbol that should be analyzed.</param>
         /// <returns>true if the member is implementing an interface member, otherwise false.</returns>
@@ -145,23 +146,20 @@ namespace StyleCop.Analyzers.Helpers
                 return false;
             }
 
-            IMethodSymbol methodSymbol;
-            IPropertySymbol propertySymbol;
-            IEventSymbol eventSymbol;
             bool isImplementingExplicitly;
 
             // Only methods, properties and events can implement an interface member
-            if ((methodSymbol = memberSymbol as IMethodSymbol) != null)
+            if (memberSymbol is IMethodSymbol methodSymbol)
             {
                 // Check if the member is implementing an interface explicitly
                 isImplementingExplicitly = methodSymbol.ExplicitInterfaceImplementations.Any();
             }
-            else if ((propertySymbol = memberSymbol as IPropertySymbol) != null)
+            else if (memberSymbol is IPropertySymbol propertySymbol)
             {
                 // Check if the member is implementing an interface explicitly
                 isImplementingExplicitly = propertySymbol.ExplicitInterfaceImplementations.Any();
             }
-            else if ((eventSymbol = memberSymbol as IEventSymbol) != null)
+            else if (memberSymbol is IEventSymbol eventSymbol)
             {
                 // Check if the member is implementing an interface explicitly
                 isImplementingExplicitly = eventSymbol.ExplicitInterfaceImplementations.Any();
@@ -183,5 +181,8 @@ namespace StyleCop.Analyzers.Helpers
                 .Select(typeSymbol.FindImplementationForInterfaceMember)
                 .Any(x => memberSymbol.Equals(x));
         }
+
+        internal static INamedTypeSymbol TupleUnderlyingTypeOrSelf(this INamedTypeSymbol tupleSymbol)
+            => tupleSymbol.TupleUnderlyingType() ?? tupleSymbol;
     }
 }

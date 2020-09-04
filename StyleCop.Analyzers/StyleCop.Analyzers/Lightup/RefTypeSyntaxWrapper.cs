@@ -1,33 +1,35 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Lightup
 {
     using System;
-    using System.Reflection;
     using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
 
     internal struct RefTypeSyntaxWrapper : ISyntaxWrapper<TypeSyntax>
     {
-        private const string RefTypeSyntaxTypeName = "Microsoft.CodeAnalysis.CSharp.Syntax.RefTypeSyntax";
-        private static readonly Type RefTypeSyntaxType;
+        internal const string WrappedTypeName = "Microsoft.CodeAnalysis.CSharp.Syntax.RefTypeSyntax";
+        private static readonly Type WrappedType;
 
         private static readonly Func<TypeSyntax, SyntaxToken> RefKeywordAccessor;
+        private static readonly Func<TypeSyntax, SyntaxToken> ReadOnlyKeywordAccessor;
         private static readonly Func<TypeSyntax, TypeSyntax> TypeAccessor;
         private static readonly Func<TypeSyntax, SyntaxToken, TypeSyntax> WithRefKeywordAccessor;
+        private static readonly Func<TypeSyntax, SyntaxToken, TypeSyntax> WithReadOnlyKeywordAccessor;
         private static readonly Func<TypeSyntax, TypeSyntax, TypeSyntax> WithTypeAccessor;
 
         private readonly TypeSyntax node;
 
         static RefTypeSyntaxWrapper()
         {
-            RefTypeSyntaxType = typeof(CSharpSyntaxNode).GetTypeInfo().Assembly.GetType(RefTypeSyntaxTypeName);
-            RefKeywordAccessor = LightupHelpers.CreateSyntaxPropertyAccessor<TypeSyntax, SyntaxToken>(RefTypeSyntaxType, nameof(RefKeyword));
-            TypeAccessor = LightupHelpers.CreateSyntaxPropertyAccessor<TypeSyntax, TypeSyntax>(RefTypeSyntaxType, nameof(Type));
-            WithRefKeywordAccessor = LightupHelpers.CreateSyntaxWithPropertyAccessor<TypeSyntax, SyntaxToken>(RefTypeSyntaxType, nameof(RefKeyword));
-            WithTypeAccessor = LightupHelpers.CreateSyntaxWithPropertyAccessor<TypeSyntax, TypeSyntax>(RefTypeSyntaxType, nameof(Type));
+            WrappedType = WrapperHelper.GetWrappedType(typeof(RefTypeSyntaxWrapper));
+            RefKeywordAccessor = LightupHelpers.CreateSyntaxPropertyAccessor<TypeSyntax, SyntaxToken>(WrappedType, nameof(RefKeyword));
+            ReadOnlyKeywordAccessor = LightupHelpers.CreateSyntaxPropertyAccessor<TypeSyntax, SyntaxToken>(WrappedType, nameof(ReadOnlyKeyword));
+            TypeAccessor = LightupHelpers.CreateSyntaxPropertyAccessor<TypeSyntax, TypeSyntax>(WrappedType, nameof(Type));
+            WithRefKeywordAccessor = LightupHelpers.CreateSyntaxWithPropertyAccessor<TypeSyntax, SyntaxToken>(WrappedType, nameof(RefKeyword));
+            WithReadOnlyKeywordAccessor = LightupHelpers.CreateSyntaxWithPropertyAccessor<TypeSyntax, SyntaxToken>(WrappedType, nameof(ReadOnlyKeyword));
+            WithTypeAccessor = LightupHelpers.CreateSyntaxWithPropertyAccessor<TypeSyntax, TypeSyntax>(WrappedType, nameof(Type));
         }
 
         private RefTypeSyntaxWrapper(TypeSyntax node)
@@ -45,6 +47,14 @@ namespace StyleCop.Analyzers.Lightup
             }
         }
 
+        public SyntaxToken ReadOnlyKeyword
+        {
+            get
+            {
+                return ReadOnlyKeywordAccessor(this.SyntaxNode);
+            }
+        }
+
         public TypeSyntax Type
         {
             get
@@ -57,12 +67,12 @@ namespace StyleCop.Analyzers.Lightup
         {
             if (node == null)
             {
-                return default(RefTypeSyntaxWrapper);
+                return default;
             }
 
             if (!IsInstance(node))
             {
-                throw new InvalidCastException($"Cannot cast '{node.GetType().FullName}' to '{RefTypeSyntaxTypeName}'");
+                throw new InvalidCastException($"Cannot cast '{node.GetType().FullName}' to '{WrappedTypeName}'");
             }
 
             return new RefTypeSyntaxWrapper((TypeSyntax)node);
@@ -75,12 +85,17 @@ namespace StyleCop.Analyzers.Lightup
 
         public static bool IsInstance(SyntaxNode node)
         {
-            return node != null && LightupHelpers.CanWrapNode(node, RefTypeSyntaxType);
+            return node != null && LightupHelpers.CanWrapNode(node, WrappedType);
         }
 
         public RefTypeSyntaxWrapper WithRefKeyword(SyntaxToken refKeyword)
         {
             return new RefTypeSyntaxWrapper(WithRefKeywordAccessor(this.SyntaxNode, refKeyword));
+        }
+
+        public RefTypeSyntaxWrapper WithReadOnlyKeyword(SyntaxToken readOnlyKeyword)
+        {
+            return new RefTypeSyntaxWrapper(WithReadOnlyKeywordAccessor(this.SyntaxNode, readOnlyKeyword));
         }
 
         public RefTypeSyntaxWrapper WithType(TypeSyntax type)

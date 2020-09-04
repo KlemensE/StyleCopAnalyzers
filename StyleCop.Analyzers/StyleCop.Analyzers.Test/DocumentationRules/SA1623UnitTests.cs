@@ -1,21 +1,22 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.Test.DocumentationRules
 {
-    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CodeFixes;
-    using Microsoft.CodeAnalysis.Diagnostics;
+    using Microsoft.CodeAnalysis.Testing;
     using StyleCop.Analyzers.DocumentationRules;
     using TestHelper;
     using Xunit;
+    using static StyleCop.Analyzers.Test.Verifiers.StyleCopCodeFixVerifier<
+        StyleCop.Analyzers.DocumentationRules.PropertySummaryDocumentationAnalyzer,
+        StyleCop.Analyzers.DocumentationRules.PropertySummaryDocumentationCodeFixProvider>;
 
     /// <summary>
     /// This class contains the unit tests for SA1623.
     /// </summary>
-    public class SA1623UnitTests : CodeFixVerifier
+    public class SA1623UnitTests
     {
         /// <summary>
         /// Verifies that property documentation that does not start with the appropriate text will result in a diagnostic.
@@ -74,11 +75,8 @@ public class TestClass
 }}
 ";
 
-            var expected = this.CSharpDiagnostic(PropertySummaryDocumentationAnalyzer.SA1623Descriptor).WithLocation(7, 7 + accessibility.Length + type.Length).WithArguments(expectedArgument);
-
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedTestCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpFixAsync(testCode, fixedTestCode).ConfigureAwait(false);
+            var expected = Diagnostic(PropertySummaryDocumentationAnalyzer.SA1623Descriptor).WithLocation(7, 7 + accessibility.Length + type.Length).WithArguments(expectedArgument);
+            await VerifyCSharpFixAsync(testCode, expected, fixedTestCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -145,19 +143,16 @@ public class TestClass
 }}
 ";
 
-            var expected = this.CSharpDiagnostic(PropertySummaryDocumentationAnalyzer.SA1623Descriptor).WithLocation(9, 11 + accessibility.Length + type.Length).WithArguments(expectedArgument);
-
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedTestCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpFixAsync(testCode, fixedTestCode).ConfigureAwait(false);
+            var expected = Diagnostic(PropertySummaryDocumentationAnalyzer.SA1623Descriptor).WithLocation(9, 11 + accessibility.Length + type.Length).WithArguments(expectedArgument);
+            await VerifyCSharpFixAsync(testCode, expected, fixedTestCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Verifies that empty summary tag does not throw an exception.
-        /// Regression test for #1943
         /// </summary>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
+        [WorkItem(1943, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/1943")]
         public async Task EmptySummaryTagShouldNotThrowAnExceptionAsync()
         {
             var testCode = @"public class ClassName
@@ -169,11 +164,108 @@ public class TestClass
     }
 }";
 
-            var expected = this.CSharpDiagnostic(PropertySummaryDocumentationAnalyzer.SA1623Descriptor).WithLocation(4, 16).WithArguments("Gets");
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
+            var expected = Diagnostic(PropertySummaryDocumentationAnalyzer.SA1623Descriptor).WithLocation(4, 16).WithArguments("Gets");
+            await VerifyCSharpFixAsync(testCode, expected, testCode, CancellationToken.None).ConfigureAwait(false);
+        }
 
-            var offeredFixes = await this.GetOfferedCSharpFixesAsync(testCode).ConfigureAwait(false);
-            Assert.Empty(offeredFixes);
+        [Fact]
+        [WorkItem(1934, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/1934")]
+        public async Task SummaryInParagraphIsAllowedAsync()
+        {
+            var testCode = @"public class ClassName
+{
+    /// <summary><para>Gets the first test value.</para></summary>
+    public int Property1
+    {
+        get;
+    }
+
+    /// <summary>
+    /// <para>Gets the second test value.</para>
+    /// </summary>
+    public int Property2
+    {
+        get;
+    }
+
+    /// <summary>
+    /// <para>
+    /// Gets the third test value.
+    /// </para>
+    /// </summary>
+    public int Property3
+    {
+        get;
+    }
+}";
+
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        [Fact]
+        [WorkItem(1934, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/1934")]
+        public async Task SummaryInParagraphCanBeFixedAsync()
+        {
+            var testCode = @"public class ClassName
+{
+    /// <summary><para>Gets the first test value.</para></summary>
+    public int Property1
+    {
+        set { }
+    }
+
+    /// <summary>
+    /// <para>Gets the second test value.</para>
+    /// </summary>
+    public int Property2
+    {
+        set { }
+    }
+
+    /// <summary>
+    /// <para>
+    /// Gets the third test value.
+    /// </para>
+    /// </summary>
+    public int Property3
+    {
+        set { }
+    }
+}";
+            var fixedTestCode = @"public class ClassName
+{
+    /// <summary><para>Sets the first test value.</para></summary>
+    public int Property1
+    {
+        set { }
+    }
+
+    /// <summary>
+    /// <para>Sets the second test value.</para>
+    /// </summary>
+    public int Property2
+    {
+        set { }
+    }
+
+    /// <summary>
+    /// <para>
+    /// Sets the third test value.
+    /// </para>
+    /// </summary>
+    public int Property3
+    {
+        set { }
+    }
+}";
+
+            DiagnosticResult[] expected =
+            {
+                Diagnostic(PropertySummaryDocumentationAnalyzer.SA1623Descriptor).WithLocation(4, 16).WithArguments("Sets"),
+                Diagnostic(PropertySummaryDocumentationAnalyzer.SA1623Descriptor).WithLocation(12, 16).WithArguments("Sets"),
+                Diagnostic(PropertySummaryDocumentationAnalyzer.SA1623Descriptor).WithLocation(22, 16).WithArguments("Sets"),
+            };
+            await VerifyCSharpFixAsync(testCode, expected, fixedTestCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -200,6 +292,10 @@ public class TestClass
         [InlineData("public", "int", "{ set {} }", "Gets or sets", "Sets")] // Regression test for #2253
         [InlineData("public", "int", "{ get; private set; }", "Sets", "Gets")] // Regression test for #2253
         [InlineData("public", "int", "{ private get; set; }", "Gets", "Sets")] // Regression test for #2253
+        [InlineData("public", "int", "{ get; }", "Returns", "Gets")]
+        [InlineData("public", "int", "{ get; set; }", "Returns", "Gets or sets")]
+        [InlineData("public", "bool", "{ get; }", "Returns a value indicating whether", "Gets a value indicating whether")]
+        [InlineData("public", "bool", "{ get; set; }", "Returns a value indicating whether", "Gets or sets a value indicating whether")]
         public async Task IncorrectSummaryTagWithKnownPrefixShouldBeFixedCorrectlyAsync(string accessibility, string type, string accessors, string summaryPrefix, string expectedArgument)
         {
             var testCode = $@"
@@ -224,20 +320,18 @@ public class TestClass
 
             DiagnosticResult[] expected =
             {
-                this.CSharpDiagnostic(PropertySummaryDocumentationAnalyzer.SA1623Descriptor).WithLocation(7, 7 + accessibility.Length + type.Length).WithArguments(expectedArgument),
+                Diagnostic(PropertySummaryDocumentationAnalyzer.SA1623Descriptor).WithLocation(7, 7 + accessibility.Length + type.Length).WithArguments(expectedArgument),
             };
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, expected, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpDiagnosticAsync(fixedTestCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
-            await this.VerifyCSharpFixAsync(testCode, fixedTestCode).ConfigureAwait(false);
+            await VerifyCSharpFixAsync(testCode, expected, fixedTestCode, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Verifies that an empty tag summary is ignored (should be handled by SA1606)
-        /// This is a regression test for #2230
+        /// Verifies that an empty tag summary is ignored (should be handled by SA1606).
         /// </summary>
         /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
+        [WorkItem(2230, "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/2230")]
         public async Task VerifyEmptySummaryTagIsIgnoredAsync()
         {
             var testCode = @"
@@ -248,19 +342,7 @@ public class TestClass
 }
 ";
 
-            await this.VerifyCSharpDiagnosticAsync(testCode, EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
-        }
-
-        /// <inheritdoc/>
-        protected override CodeFixProvider GetCSharpCodeFixProvider()
-        {
-            return new PropertySummaryDocumentationCodeFixProvider();
-        }
-
-        /// <inheritdoc/>
-        protected override IEnumerable<DiagnosticAnalyzer> GetCSharpDiagnosticAnalyzers()
-        {
-            yield return new PropertySummaryDocumentationAnalyzer();
+            await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
     }
 }

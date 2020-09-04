@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.DocumentationRules
 {
@@ -11,13 +11,13 @@ namespace StyleCop.Analyzers.DocumentationRules
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Formatting;
+    using StyleCop.Analyzers.Helpers;
 
     /// <summary>
     /// Implements a code fix for <see cref="SA1642ConstructorSummaryDocumentationMustBeginWithStandardText"/>
@@ -56,9 +56,8 @@ namespace StyleCop.Analyzers.DocumentationRules
                 }
 
                 var node = root.FindNode(diagnostic.Location.SourceSpan, findInsideTrivia: true, getInnermostNodeForTie: true);
-                var xmlElementSyntax = node as XmlElementSyntax;
 
-                if (xmlElementSyntax != null)
+                if (node is XmlElementSyntax xmlElementSyntax)
                 {
                     context.RegisterCodeFix(
                         CodeAction.Create(
@@ -80,33 +79,19 @@ namespace StyleCop.Analyzers.DocumentationRules
             }
         }
 
-        private static Task<Document> GetTransformedDocumentAsync(Document document, SyntaxNode root, XmlElementSyntax node, CancellationToken cancellationToken)
+        internal static ImmutableArray<string> GenerateStandardText(Document document, BaseMethodDeclarationSyntax methodDeclaration, BaseTypeDeclarationSyntax typeDeclaration, CancellationToken cancellationToken)
         {
-            var typeDeclaration = node.FirstAncestorOrSelf<BaseTypeDeclarationSyntax>();
-            var declarationSyntax = node.FirstAncestorOrSelf<BaseMethodDeclarationSyntax>();
             bool isStruct = typeDeclaration.IsKind(SyntaxKind.StructDeclaration);
             var settings = document.Project.AnalyzerOptions.GetStyleCopSettings(cancellationToken);
             var culture = new CultureInfo(settings.DocumentationRules.DocumentationCulture);
             var resourceManager = DocumentationResources.ResourceManager;
 
-            TypeParameterListSyntax typeParameterList;
-            ClassDeclarationSyntax classDeclaration = typeDeclaration as ClassDeclarationSyntax;
-            if (classDeclaration != null)
-            {
-                typeParameterList = classDeclaration.TypeParameterList;
-            }
-            else
-            {
-                typeParameterList = (typeDeclaration as StructDeclarationSyntax)?.TypeParameterList;
-            }
-
-            ImmutableArray<string> standardText;
-            if (declarationSyntax is ConstructorDeclarationSyntax)
+            if (methodDeclaration is ConstructorDeclarationSyntax)
             {
                 var typeKindText = resourceManager.GetString(isStruct ? nameof(DocumentationResources.TypeTextStruct) : nameof(DocumentationResources.TypeTextClass), culture);
-                if (declarationSyntax.Modifiers.Any(SyntaxKind.StaticKeyword))
+                if (methodDeclaration.Modifiers.Any(SyntaxKind.StaticKeyword))
                 {
-                    standardText = ImmutableArray.Create(
+                    return ImmutableArray.Create(
                         string.Format(resourceManager.GetString(nameof(DocumentationResources.StaticConstructorStandardTextFirstPart), culture), typeKindText),
                         string.Format(resourceManager.GetString(nameof(DocumentationResources.StaticConstructorStandardTextSecondPart), culture), typeKindText));
                 }
@@ -115,31 +100,88 @@ namespace StyleCop.Analyzers.DocumentationRules
                     // Prefer to insert the "non-private" wording for all constructors, even though both are considered
                     // acceptable for private constructors by the diagnostic.
                     // https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/413
-                    standardText = ImmutableArray.Create(
+                    return ImmutableArray.Create(
                         string.Format(resourceManager.GetString(nameof(DocumentationResources.NonPrivateConstructorStandardTextFirstPart), culture), typeKindText),
                         string.Format(resourceManager.GetString(nameof(DocumentationResources.NonPrivateConstructorStandardTextSecondPart), culture), typeKindText));
                 }
             }
-            else if (declarationSyntax is DestructorDeclarationSyntax)
+            else if (methodDeclaration is DestructorDeclarationSyntax)
             {
-                standardText =
-                    ImmutableArray.Create(
-                        resourceManager.GetString(nameof(DocumentationResources.DestructorStandardTextFirstPart), culture),
-                        resourceManager.GetString(nameof(DocumentationResources.DestructorStandardTextSecondPart), culture));
+                return ImmutableArray.Create(
+                    resourceManager.GetString(nameof(DocumentationResources.DestructorStandardTextFirstPart), culture),
+                    resourceManager.GetString(nameof(DocumentationResources.DestructorStandardTextSecondPart), culture));
             }
             else
             {
                 throw new InvalidOperationException("XmlElementSyntax has invalid method as its parent");
             }
+        }
 
-            string newLineText = document.Project.Solution.Workspace.Options.GetOption(FormattingOptions.NewLine, LanguageNames.CSharp);
+        internal static SyntaxList<XmlNodeSyntax> BuildStandardTextSyntaxList(BaseTypeDeclarationSyntax typeDeclaration, string preText, string postText)
+        {
+            TypeParameterListSyntax typeParameterList = GetTypeParameterList(typeDeclaration);
+
+            return XmlSyntaxFactory.List(
+                XmlSyntaxFactory.Text(preText),
+                BuildSeeElement(typeDeclaration.Identifier, typeParameterList),
+                XmlSyntaxFactory.Text(postText.EndsWith(".") ? postText : (postText + ".")));
+        }
+
+        internal static SyntaxList<XmlNodeSyntax> BuildStandardTextSyntaxList(BaseTypeDeclarationSyntax typeDeclaration, string newLineText, string preText, string postText)
+        {
+            TypeParameterListSyntax typeParameterList = GetTypeParameterList(typeDeclaration);
+
+            return XmlSyntaxFactory.List(
+                XmlSyntaxFactory.NewLine(newLineText),
+                XmlSyntaxFactory.Text(preText),
+                BuildSeeElement(typeDeclaration.Identifier, typeParameterList),
+                XmlSyntaxFactory.Text(postText.EndsWith(".") ? postText : (postText + ".")));
+        }
+
+        private static TypeParameterListSyntax GetTypeParameterList(BaseTypeDeclarationSyntax typeDeclaration)
+        {
+            if (typeDeclaration is ClassDeclarationSyntax classDeclaration)
+            {
+                return classDeclaration.TypeParameterList;
+            }
+
+            return (typeDeclaration as StructDeclarationSyntax)?.TypeParameterList;
+        }
+
+        private static Task<Document> GetTransformedDocumentAsync(Document document, SyntaxNode root, XmlElementSyntax node, CancellationToken cancellationToken)
+        {
+            var typeDeclaration = node.FirstAncestorOrSelf<BaseTypeDeclarationSyntax>();
+            var declarationSyntax = node.FirstAncestorOrSelf<BaseMethodDeclarationSyntax>();
+
+            var standardText = GenerateStandardText(document, declarationSyntax, typeDeclaration, cancellationToken);
 
             string trailingString = string.Empty;
 
-            var newContent = RemoveMalformattedStandardText(node.Content, typeDeclaration.Identifier, standardText[0], standardText[1], ref trailingString);
+            var newContent = RemoveMalformattedStandardText(node.Content, standardText[0], standardText[1], ref trailingString);
 
-            var list = BuildStandardText(typeDeclaration.Identifier, typeParameterList, newLineText, standardText[0], standardText[1] + trailingString);
+            if (newContent.Count == 1 && newContent[0] is XmlTextSyntax xmlText)
+            {
+                if (string.IsNullOrWhiteSpace(xmlText.ToString()))
+                {
+                    newContent = default;
+                }
+            }
+
+            SyntaxList<XmlNodeSyntax> list;
+            if (IsMultiLine(node))
+            {
+                string newLineText = document.Project.Solution.Workspace.Options.GetOption(FormattingOptions.NewLine, LanguageNames.CSharp);
+                list = BuildStandardTextSyntaxList(typeDeclaration, newLineText, standardText[0], standardText[1] + trailingString);
+            }
+            else
+            {
+                list = BuildStandardTextSyntaxList(typeDeclaration, standardText[0], standardText[1] + trailingString);
+            }
+
             newContent = newContent.InsertRange(0, list);
+
+            newContent = RemoveTrailingEmptyLines(newContent);
+
             var newNode = node.WithContent(newContent).AdjustDocumentationCommentNewLineTrivia();
 
             var newRoot = root.ReplaceNode(node, newNode);
@@ -149,15 +191,18 @@ namespace StyleCop.Analyzers.DocumentationRules
             return Task.FromResult(newDocument);
         }
 
+        private static bool IsMultiLine(XmlElementSyntax node)
+        {
+            var lineSpan = node.GetLineSpan();
+            return lineSpan.StartLinePosition.Line != lineSpan.EndLinePosition.Line;
+        }
+
         private static Task<Document> GetTransformedDocumentAsync(Document document, SyntaxNode root, XmlEmptyElementSyntax node)
         {
             var typeDeclaration = node.FirstAncestorOrSelf<BaseTypeDeclarationSyntax>();
-            var declarationSyntax = node.FirstAncestorOrSelf<BaseMethodDeclarationSyntax>();
-            bool isStruct = typeDeclaration.IsKind(SyntaxKind.StructDeclaration);
 
             TypeParameterListSyntax typeParameterList;
-            ClassDeclarationSyntax classDeclaration = typeDeclaration as ClassDeclarationSyntax;
-            if (classDeclaration != null)
+            if (typeDeclaration is ClassDeclarationSyntax classDeclaration)
             {
                 typeParameterList = classDeclaration.TypeParameterList;
             }
@@ -173,7 +218,7 @@ namespace StyleCop.Analyzers.DocumentationRules
             return Task.FromResult(newDocument);
         }
 
-        private static SyntaxList<XmlNodeSyntax> RemoveMalformattedStandardText(SyntaxList<XmlNodeSyntax> content, SyntaxToken identifier, string preText, string postText, ref string trailingString)
+        private static SyntaxList<XmlNodeSyntax> RemoveMalformattedStandardText(SyntaxList<XmlNodeSyntax> content, string preText, string postText, ref string trailingString)
         {
             var regex = new Regex(@"^\s*" + Regex.Escape(preText) + "[^ ]+" + Regex.Escape(postText));
             var item = content.OfType<XmlTextSyntax>().FirstOrDefault();
@@ -244,15 +289,6 @@ namespace StyleCop.Analyzers.DocumentationRules
             return content;
         }
 
-        private static SyntaxList<XmlNodeSyntax> BuildStandardText(SyntaxToken identifier, TypeParameterListSyntax typeParameters, string newLineText, string preText, string postText)
-        {
-            return XmlSyntaxFactory.List(
-                XmlSyntaxFactory.NewLine(newLineText),
-                XmlSyntaxFactory.Text(preText),
-                BuildSeeElement(identifier, typeParameters),
-                XmlSyntaxFactory.Text(postText.EndsWith(".") ? postText : (postText + ".")));
-        }
-
         private static XmlEmptyElementSyntax BuildSeeElement(SyntaxToken identifier, TypeParameterListSyntax typeParameters)
         {
             TypeSyntax identifierName;
@@ -283,6 +319,46 @@ namespace StyleCop.Analyzers.DocumentationRules
             }
 
             return SyntaxFactory.TypeArgumentList(list);
+        }
+
+        private static SyntaxList<XmlNodeSyntax> RemoveTrailingEmptyLines(SyntaxList<XmlNodeSyntax> content)
+        {
+            if (!(content[content.Count - 1] is XmlTextSyntax xmlText))
+            {
+                return content;
+            }
+
+            // skip the last token, as it contains the documentation comment for the closing tag, which needs to remain.
+            var firstEmptyToken = -1;
+            for (var j = xmlText.TextTokens.Count - 2; j >= 0; j--)
+            {
+                var textToken = xmlText.TextTokens[j];
+
+                if (textToken.IsXmlWhitespace())
+                {
+                    firstEmptyToken = j;
+                }
+                else if (textToken.IsXmlNewLine() && textToken.LeadingTrivia.Any(SyntaxKind.DocumentationCommentExteriorTrivia))
+                {
+                    // Skip completely blank lines
+                    firstEmptyToken = j;
+                }
+                else if (textToken.IsKind(SyntaxKind.XmlTextLiteralToken) && !string.IsNullOrWhiteSpace(textToken.Text))
+                {
+                    break;
+                }
+            }
+
+            if (firstEmptyToken > -1)
+            {
+                var newContent = content.RemoveAt(content.Count - 1);
+                newContent = newContent
+                    .Add(XmlSyntaxFactory.Text(xmlText.TextTokens.Take(firstEmptyToken).ToArray()))
+                    .Add(XmlSyntaxFactory.Text(xmlText.TextTokens.Last()));
+                return newContent;
+            }
+
+            return content;
         }
     }
 }

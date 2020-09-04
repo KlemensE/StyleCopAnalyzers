@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.DocumentationRules
 {
@@ -78,7 +78,7 @@ namespace StyleCop.Analyzers.DocumentationRules
     /// </code>
     ///
     /// <para>Private instance constructors should use the summary text "Prevents a default instance of the {class name}
-    /// class from being created."</para>
+    /// class from being created.".</para>
     ///
     /// <code language="csharp">
     /// /// &lt;summary&gt;
@@ -97,10 +97,10 @@ namespace StyleCop.Analyzers.DocumentationRules
         /// <see cref="SA1642ConstructorSummaryDocumentationMustBeginWithStandardText"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1642";
-        private const string Title = "Constructor summary documentation should begin with standard text";
-        private const string MessageFormat = "Constructor summary documentation should begin with standard text";
-        private const string Description = "The XML documentation header for a C# constructor does not contain the appropriate summary text.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1642.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(DocumentationResources.SA1642Title), DocumentationResources.ResourceManager, typeof(DocumentationResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(DocumentationResources.SA1642MessageFormat), DocumentationResources.ResourceManager, typeof(DocumentationResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(DocumentationResources.SA1642Description), DocumentationResources.ResourceManager, typeof(DocumentationResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.DocumentationRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);

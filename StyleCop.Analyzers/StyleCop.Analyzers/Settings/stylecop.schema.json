@@ -1,5 +1,5 @@
 ﻿{
-  "$schema": "http://json-schema.org/draft-04/schema",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "id": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
   "title": "StyleCop Analyzers Configuration",
   "description": "Configuration file for StyleCop Analyzers",
@@ -46,6 +46,11 @@
           "description": "Configuration for readability rules (SA1100-)",
           "additionalProperties": false,
           "properties": {
+            "allowBuiltInTypeAliases": {
+              "type": "boolean",
+              "description": "When true, diagnostics will not be reported for using aliases of built-in types.",
+              "default": false
+            }
           }
         },
         "orderingRules": {
@@ -116,12 +121,35 @@
             "allowedHungarianPrefixes": {
               "type": "array",
               "description": "Allowed Hungarian notation prefixes.",
-              "default": [ ],
+              "default": [],
               "items": {
                 "type": "string",
                 "pattern": "^[a-z]{1,2}$",
                 "uniqueItems": true
               }
+            },
+            "allowedNamespaceComponents": {
+              "type": "array",
+              "description": "Allowed namespace components, such as ones beginning with a lowercase letter.",
+              "default": [],
+              "items": {
+                "type": "string",
+                "uniqueItems": true
+              }
+            },
+            "includeInferredTupleElementNames": {
+              "type": "boolean",
+              "description": "Specifies whether inferred tuple element names will be analyzed as well.",
+              "default": false
+            },
+            "tupleElementNameCasing": {
+              "type": "string",
+              "description": "Specifies the casing convention used for tuple element names.",
+              "enum": [
+                "camelCase",
+                "PascalCase"
+              ],
+              "default": "PascalCase"
             }
           }
         },
@@ -239,9 +267,16 @@
               "enum": [ "stylecop", "metadata" ]
             },
             "documentationCulture": {
-                "type": "string",
-                "description": "The culture that should be used for documentation comments.",
-                "default": "en-US"
+              "type": "string",
+              "description": "The culture that should be used for documentation comments.",
+              "default": "en-US"
+            },
+            "excludeFromPunctuationCheck": {
+              "type": "array",
+              "description": "Specifies the top-level tags within XML documentation that will be excluded from punctuation analysis.",
+              "default": [
+                "seealso"
+              ]
             }
           }
         }

@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.NamingRules
 {
@@ -8,12 +8,12 @@ namespace StyleCop.Analyzers.NamingRules
     using System.Composition;
     using System.Threading;
     using System.Threading.Tasks;
-    using Helpers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using StyleCop.Analyzers.Helpers;
 
     /// <summary>
     /// Implements a code fix for all analyzers that require a symbol to be upper case.
@@ -55,14 +55,15 @@ namespace StyleCop.Analyzers.NamingRules
             foreach (var diagnostic in context.Diagnostics)
             {
                 var token = root.FindToken(diagnostic.Location.SourceSpan.Start);
-                var baseName = char.ToUpper(token.ValueText[0]) + token.ValueText.Substring(1);
+                var tokenText = token.ValueText.TrimStart('_');
+                var baseName = char.ToUpper(tokenText[0]) + tokenText.Substring(1);
                 var newName = baseName;
                 var memberSyntax = RenameHelper.GetParentDeclaration(token);
 
                 if (memberSyntax is NamespaceDeclarationSyntax)
                 {
                     // namespaces are not symbols. So we are just renaming the namespace
-                    Func<CancellationToken, Task<Document>> renameNamespace = cancellationToken =>
+                    Task<Document> RenameNamespace(CancellationToken cancellationToken)
                     {
                         IdentifierNameSyntax identifierSyntax = (IdentifierNameSyntax)token.Parent;
 
@@ -70,12 +71,12 @@ namespace StyleCop.Analyzers.NamingRules
 
                         var newRoot = root.ReplaceNode(identifierSyntax, newIdentifierSyntax);
                         return Task.FromResult(context.Document.WithSyntaxRoot(newRoot));
-                    };
+                    }
 
                     context.RegisterCodeFix(
                         CodeAction.Create(
                             string.Format(NamingResources.RenameToCodeFix, newName),
-                            renameNamespace,
+                            (Func<CancellationToken, Task<Document>>)RenameNamespace,
                             nameof(RenameToUpperCaseCodeFixProvider) + "_" + diagnostic.Id),
                         diagnostic);
                 }
@@ -95,7 +96,7 @@ namespace StyleCop.Analyzers.NamingRules
                         && !await RenameHelper.IsValidNewMemberNameAsync(semanticModel, declaredSymbol, newName, context.CancellationToken).ConfigureAwait(false))
                     {
                         usedSuffix = true;
-                        newName = newName + Suffix;
+                        newName += Suffix;
                     }
 
                     int index = 0;

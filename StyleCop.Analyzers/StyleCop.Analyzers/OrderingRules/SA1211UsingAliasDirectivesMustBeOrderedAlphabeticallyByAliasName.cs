@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 namespace StyleCop.Analyzers.OrderingRules
 {
@@ -28,10 +28,10 @@ namespace StyleCop.Analyzers.OrderingRules
         /// <see cref="SA1211UsingAliasDirectivesMustBeOrderedAlphabeticallyByAliasName"/> analyzer.
         /// </summary>
         public const string DiagnosticId = "SA1211";
-        private const string Title = "Using alias directives should be ordered alphabetically by alias name";
-        private const string MessageFormat = "Using alias directive for '{0}' should appear before using alias directive for '{1}'";
-        private const string Description = "The using-alias directives within a C# code file are not sorted alphabetically by alias name.";
         private const string HelpLink = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1211.md";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(OrderingResources.SA1211Title), OrderingResources.ResourceManager, typeof(OrderingResources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(OrderingResources.SA1211MessageFormat), OrderingResources.ResourceManager, typeof(OrderingResources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(OrderingResources.SA1211Description), OrderingResources.ResourceManager, typeof(OrderingResources));
 
         private static readonly DiagnosticDescriptor Descriptor =
             new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, AnalyzerCategory.OrderingRules, DiagnosticSeverity.Warning, AnalyzerConstants.EnabledByDefault, Description, HelpLink);
@@ -55,20 +55,14 @@ namespace StyleCop.Analyzers.OrderingRules
 
         private static void HandleCompilationUnit(SyntaxNodeAnalysisContext context)
         {
-            var compilationUnit = context.Node as CompilationUnitSyntax;
-            if (compilationUnit != null)
-            {
-                HandleUsingDirectives(context, compilationUnit.Usings);
-            }
+            var compilationUnit = (CompilationUnitSyntax)context.Node;
+            HandleUsingDirectives(context, compilationUnit.Usings);
         }
 
         private static void HandleNamespaceDeclaration(SyntaxNodeAnalysisContext context)
         {
-            var namespaceDeclaration = context.Node as NamespaceDeclarationSyntax;
-            if (namespaceDeclaration != null)
-            {
-                HandleUsingDirectives(context, namespaceDeclaration.Usings);
-            }
+            var namespaceDeclaration = (NamespaceDeclarationSyntax)context.Node;
+            HandleUsingDirectives(context, namespaceDeclaration.Usings);
         }
 
         private static void HandleUsingDirectives(SyntaxNodeAnalysisContext context, SyntaxList<UsingDirectiveSyntax> usingDirectives)
